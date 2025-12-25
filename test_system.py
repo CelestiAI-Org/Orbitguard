@@ -12,13 +12,13 @@ print("="*60)
 print("TEST 1: Module Imports")
 print("="*60)
 try:
-    from src.data_loader import CDMDataLoader
-    from src.preprocessor import DataPreprocessor
-    from src.feature_engineer import FeatureEngineer
-    from src.trainer import CollisionRiskTrainer
-    from src.predictor import CollisionRiskPredictor
-    from src.explainer import SHAPExplainer
-    from src.visualizer import CollisionRiskVisualizer
+    from app.data_loader import CDMDataLoader
+    from app.preprocessor import DataPreprocessor
+    from app.feature_engineering import FeatureEngineer
+    from app.model import CollisionRiskTrainer
+    from app.predictor import CollisionRiskPredictor
+    from app.explainer import SHAPExplainer
+    from app.visualizer import CollisionRiskVisualizer
     print("✓ All modules imported successfully")
 except Exception as e:
     print(f"✗ Import failed: {e}")
