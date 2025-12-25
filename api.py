@@ -40,15 +40,21 @@ def load_pipeline(config_path: str = "config.yaml") -> None:
         config = yaml.safe_load(f)
     pipeline_components['config'] = config
     
-    # Load model
-    trainer = CollisionRiskTrainer(config['model']['params'])
-    model = trainer.load_model(config['output']['model_path'])
+    # Load model and preprocessor
+    import joblib
+    save_data = joblib.load(config['output']['model_path'])
+    model = save_data['model']
     pipeline_components['model'] = model
     
+    # Load preprocessor if available
+    if 'preprocessor' in save_data:
+        pipeline_components['preprocessor'] = save_data['preprocessor']
+    else:
+        pipeline_components['preprocessor'] = DataPreprocessor(
+            random_state=config['data']['random_state']
+        )
+    
     # Initialize components
-    pipeline_components['preprocessor'] = DataPreprocessor(
-        random_state=config['data']['random_state']
-    )
     pipeline_components['feature_engineer'] = FeatureEngineer()
     pipeline_components['predictor'] = CollisionRiskPredictor(
         model,
@@ -98,9 +104,20 @@ def predict() -> Dict[str, Any]:
         # Get feature list
         feature_list = feature_engineer.get_feature_list()
         
+        # Normalize features if preprocessor is available
+        preprocessor = pipeline_components['preprocessor']
+        if preprocessor and preprocessor.scaler is not None:
+            X = preprocessor.normalize_features(
+                df_with_features, 
+                feature_list, 
+                fit=False
+            )[feature_list]
+        else:
+            X = df_with_features[feature_list]
+        
         # Make prediction
         predictor = pipeline_components['predictor']
-        result = predictor.predict_single(df_with_features[feature_list].iloc[0].to_dict())
+        result = predictor.predict_single(X.iloc[0].to_dict())
         
         return jsonify(result)
     
@@ -142,12 +159,23 @@ def predict_batch() -> Dict[str, Any]:
         # Get feature list
         feature_list = feature_engineer.get_feature_list()
         
+        # Normalize features if preprocessor is available
+        preprocessor = pipeline_components['preprocessor']
+        if preprocessor and preprocessor.scaler is not None:
+            X = preprocessor.normalize_features(
+                df_with_features, 
+                feature_list, 
+                fit=False
+            )[feature_list]
+        else:
+            X = df_with_features[feature_list]
+        
         # Make predictions
         predictor = pipeline_components['predictor']
-        predictions = predictor.batch_predict(df_with_features[feature_list])
+        predictions = predictor.batch_predict(X)
         
         # Get summary
-        summary = predictor.get_prediction_summary(df_with_features[feature_list])
+        summary = predictor.get_prediction_summary(X)
         
         return jsonify({
             'predictions': predictions.to_dict('records'),
@@ -181,7 +209,17 @@ def explain_prediction() -> Dict[str, Any]:
         
         # Get feature list
         feature_list = feature_engineer.get_feature_list()
-        X = df_with_features[feature_list]
+        
+        # Normalize features if preprocessor is available
+        preprocessor = pipeline_components['preprocessor']
+        if preprocessor and preprocessor.scaler is not None:
+            X = preprocessor.normalize_features(
+                df_with_features, 
+                feature_list, 
+                fit=False
+            )[feature_list]
+        else:
+            X = df_with_features[feature_list]
         
         # Create explainer if not exists
         if pipeline_components['explainer'] is None:
@@ -224,10 +262,21 @@ def get_high_risk_events() -> Dict[str, Any]:
         # Get feature list
         feature_list = feature_engineer.get_feature_list()
         
+        # Normalize features if preprocessor is available
+        preprocessor = pipeline_components['preprocessor']
+        if preprocessor and preprocessor.scaler is not None:
+            X = preprocessor.normalize_features(
+                df_with_features, 
+                feature_list, 
+                fit=False
+            )[feature_list]
+        else:
+            X = df_with_features[feature_list]
+        
         # Get high-risk events
         predictor = pipeline_components['predictor']
         high_risk_events = predictor.get_high_risk_events(
-            df_with_features[feature_list],
+            X,
             min_probability=min_probability
         )
         
