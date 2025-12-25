@@ -120,20 +120,48 @@ curl -X POST http://localhost:5000/explain \
 
 ## 📊 Features Engineered
 
-The system engineers the following features from raw CDM data:
+The system engineers 29 features from raw CDM data:
 
+### Core Features
 1. **miss_distance**: Distance at closest approach (meters)
 2. **relative_velocity**: Relative velocity between objects (m/s)
 3. **collision_probability**: Calculated collision probability
-4. **time_to_tca**: Time to Time of Closest Approach (hours)
-5. **combined_mass**: Sum of both object masses (kg)
-6. **radial_miss_distance**: Radial component of miss distance
-7. **along_track_miss_distance**: Along-track component
-8. **cross_track_miss_distance**: Cross-track component
-9. **kinetic_energy**: Kinetic energy at TCA
-10. **urgency_factor**: Inverse of time to TCA
-11. **miss_distance_velocity_ratio**: Miss distance to velocity ratio
-12. **collision_severity**: Combined severity index
+4. **time_to_tca**: Time to Time of Closest Approach (seconds)
+
+### Object Features
+5. **object1_mass**, **object2_mass**: Object masses (kg)
+6. **object1_size**, **object2_size**: Radar cross section (RCS)
+7. **combined_mass**: Sum of both object masses
+8. **combined_size**: Sum of both object sizes
+
+### Geometric Features
+9. **radial_miss_distance**: Radial component of miss distance
+10. **along_track_miss_distance**: Along-track component
+11. **cross_track_miss_distance**: Cross-track component
+
+### Physics Features
+12. **kinetic_energy**: Kinetic energy at TCA
+13. **miss_distance_velocity_ratio**: Time to impact if on collision course
+14. **collision_severity**: Combined severity index
+15. **momentum**: Combined momentum
+
+### Temporal Features
+16. **urgency_factor**: Inverse of time to TCA
+17. **time_to_tca_hours**: Time to TCA in hours
+
+### Orbital Regime (One-Hot Encoded)
+18. **regime_LEO**: Low Earth Orbit (0-2000 km)
+19. **regime_MEO**: Medium Earth Orbit (2000-35786 km)
+20. **regime_GEO**: Geostationary Orbit (35786+ km)
+
+### Historical Features
+21. **historical_maneuver_flag**: Has object maneuvered before
+22. **conjunction_frequency**: How often this pair has close approaches
+
+### Interaction Features
+23. **size_distance_ratio**: Combined size relative to miss distance
+24. **prob_velocity_product**: Probability-velocity interaction
+25. **mass_velocity_ratio**: Mass-velocity interaction
 
 ## 🎨 Visualizations
 
@@ -200,24 +228,33 @@ Test Set Performance:
 
 ```
 collision-risk-ai/
-├── src/
+├── app/
 │   ├── __init__.py
-│   ├── data_loader.py        # CDM data loading
-│   ├── preprocessor.py       # Data preprocessing
-│   ├── feature_engineer.py   # Feature engineering
-│   ├── trainer.py            # Model training
-│   ├── predictor.py          # Prediction with confidence
-│   ├── explainer.py          # SHAP explainability
-│   └── visualizer.py         # Matplotlib visualizations
+│   ├── config.py              # Centralized configuration
+│   ├── data_loader.py         # CDM data loading
+│   ├── preprocessor.py        # Data preprocessing
+│   ├── feature_engineering.py # Feature engineering (29 features)
+│   ├── model.py               # Model training (Random Forest)
+│   ├── predictor.py           # Prediction with confidence
+│   ├── explainer.py           # SHAP explainability
+│   ├── visualizer.py          # Matplotlib visualizations
+│   └── utils.py               # Logging & validation utilities
 ├── data/
-│   ├── cdm_data.csv          # Training data
-│   └── cdm_data_test.csv     # Test data
+│   ├── cdm_data.csv           # Training data
+│   └── cdm_data_test.csv      # Test data
 ├── models/
 │   └── collision_risk_model.pkl  # Trained model
-├── plots/                    # Generated visualizations
-├── results/                  # Prediction results
-├── main.py                   # Main pipeline script
-├── api.py                    # Flask REST API
+├── plots/                     # Generated visualizations
+├── results/                   # Prediction results
+├── logs/                      # Application logs
+├── main.py                    # Main pipeline script
+├── api.py                     # Flask REST API
+├── training_notebook.ipynb    # Jupyter notebook for training
+├── generate_data.py           # Sample data generator
+├── config.yaml                # Configuration file
+├── requirements.txt           # Python dependencies
+└── README.md                  # This file
+```
 ├── generate_data.py          # Sample data generator
 ├── config.yaml               # Configuration file
 ├── requirements.txt          # Python dependencies
