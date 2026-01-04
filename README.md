@@ -20,8 +20,8 @@ A sophisticated machine learning system that predicts satellite collision risk b
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-repo/collision-risk-ai.git
-cd collision-risk-ai
+git clone https://github.com/ra-xor/collision-risk-ai-mostafa-fork.git
+cd collision-risk-ai-mostafa-fork
 ```
 
 2. Install dependencies:
