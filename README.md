@@ -85,4 +85,7 @@ collision-risk-ai/
 ```
 
 ## 👥 Authors
-- Mostafa & Team
+- Mostafa & NEO-FLUX Team 
+
+## 📜 License
+MIT License
