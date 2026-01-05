@@ -14,3 +14,9 @@ training:
 output:
   model_path: "models/lstm_model.pth"
   plots_dir: "plots"
+
+thresholds:
+  high_risk: 0.0001        # 1e-4 (RED)
+  medium_risk: 0.00001     # 1e-5 (YELLOW)
+  reaction_time_hours: 6   # Minimum time required to maneuver
+  miss_distance_critical: 1000.0 # meters

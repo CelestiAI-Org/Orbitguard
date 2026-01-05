@@ -15,7 +15,7 @@ class TimeSeriesPreprocessor:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(log_level)
     
-    def process(self, raw_data: List[Dict[str, Any]]) -> Tuple[List[np.ndarray], List[float]]:
+    def process(self, raw_data: List[Dict[str, Any]]) -> Tuple[List[np.ndarray], List[float], List[Dict[str, Any]], List[pd.DataFrame]]:
         """
         Convert raw CDM dictionaries into LSTM-ready sequences.
         
@@ -25,6 +25,8 @@ class TimeSeriesPreprocessor:
         Returns:
             X: List of sequences (numpy arrays of shape [seq_len, num_features])
             y: List of target values (e.g., final probability or risk)
+            meta: List of metadata dicts for each event (TCA, SAT_IDs)
+            histories: List of DataFrames containing the full history for each event (for trend analysis)
         """
         df = pd.DataFrame(raw_data)
         
@@ -41,6 +43,8 @@ class TimeSeriesPreprocessor:
         
         sequences = []
         targets = []
+        meta_list = []
+        history_list = []
         
         for name, group in grouped:
             # 3. Sort by creation time (evolution of the event)
@@ -57,12 +61,24 @@ class TimeSeriesPreprocessor:
             
             sequences.append(seq_array)
             
-            # Target: The latest Risk (Prob) or binary label?
-            # For now, let's try to predict the latest Probability
+            # Target: The latest Risk (Prob)
             latest_pc = group['PC'].iloc[-1]
             targets.append(latest_pc)
+
+            # Metadata for dashboard
+            sat1_id, sat2_id, tca_time = name
+            meta_list.append({
+                'SAT_1_ID': sat1_id,
+                'SAT_2_ID': sat2_id,
+                'TCA': tca_time,
+                'LATEST_MIN_RNG': group['MIN_RNG'].iloc[-1] if 'MIN_RNG' in group else None,
+                'LATEST_PC': latest_pc
+            })
             
-        return sequences, targets
+            # Keep history for trend calculations
+            history_list.append(group[['CREATED', 'PC', 'MIN_RNG']].copy())
+            
+        return sequences, targets, meta_list, history_list
 
     def _clean_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """Parse dates and handle missing values."""
