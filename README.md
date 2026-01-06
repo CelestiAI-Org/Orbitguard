@@ -1,91 +1,99 @@
-# Satellite Collision Risk AI (Time-Series LSTM)
+# 🛰️ AI Collision Risk Predictor (NEO-FLUX)
 
-A sophisticated machine learning system that predicts satellite collision risk by analyzing the *evolution* of Conjunction Data Messages (CDMs) over time. Unlike traditional snapshot-based approaches, this system uses a Long Short-Term Memory (LSTM) network to model how risk parameters (Probability, Miss Distance, etc.) change as the Time of Closest Approach (TCA) nears.
+> **Turning Raw Space Data into Actionable Intelligence.**
 
-## 🚀 Key Features
+In the crowded orbital environment, satellite operators are overwhelmed by thousands of Conjunction Data Messages (CDMs) daily. Most are noise; a few are critical. This system cuts through that noise using **Deep Learning** to predict not just the probability of collision, but the *trajectory of risk*, giving operators clear, actionable deadlines.
 
-- **Time-Series Analysis**: Groups multiple CDM updates for the same event to form a sequence.
-- **LSTM Deep Learning**: Uses PyTorch to capture temporal dependencies and risk trajectories.
-- **Certainty Quantification**: Estimates model confidence using Monte Carlo Dropout.
-- **JSON Data Support**: Natively processes `CDM_public` JSON formats.
-- **Configurable Pipeline**: Easy adjustment of sequence length, model size, and training parameters via `config.yaml`.
+---
 
-## 📦 Installation
+## 🏗️ System Architecture
 
-### Prerequisites
-- Python 3.8+
-- PyTorch 2.0+
+The solution builds a complete end-to-end pipeline: **Ingest (ETL) -> Deep Learning -> Actionable Dashboard**.
 
-### Setup
+### 1. The Data Pipeline (ETL & Feature Engineering)
+Raw CDMs are typically snapshot updates. A single conjunction event might receive 20-30 updates over the course of a week.
+*   **Ingest**: We load raw JSON CDMs (compliant with CCSDS standards).
+*   **Grouping & Sorting**: The pipeline groups messages by unique event signatures: `(SAT_1_ID, SAT_2_ID, TCA)`. It then sorts them by `CREATION_DATE` to reconstruct the *narrative* of the event.
+*   **Feature Engineering**:
+    *   **Log-Scaling**: Miss Distance (`MIN_RNG`) often varies from 10km to 10m. We use log-scaling to normalize this dynamic range for the neural network.
+    *   **Time Deltas**: We calculate `Time_to_TCA` to help the model understand urgency.
+    *   **Sequence Padding**: Events have varying update counts. The `TimeSeriesPreprocessor` dynamically pads or truncates sequences (default `seq_len=5`) to create uniform tensors for batch processing.
 
-1. Clone the repository:
-```bash
-git clone https://github.com/ra-xor/collision-risk-ai-mostafa-fork.git
-cd collision-risk-ai-mostafa-fork
-```
+### 2. Machine Learning Architecture (The Brain)
+We treat collision prediction as a **Time-Series Forecasting** problem.
 
-2. Install dependencies:
+#### The Evolution: Version 1 vs Version 2
+*   **Version 1 (Standard LSTM)**: A canonical Long Short-Term Memory network. It successfully learned temporal patterns but struggled to react quickly to sudden changes in the probability reported by space surveillance networks (Validation Loss: `1.5e-5`).
+*   **Version 2 (Skip-Connection LSTM - *Champion Model*)**: We introduced a **Residual Skip Connection**.
+    *   *Concept*: The model receives the full sequence but also gets a direct "shortcut" to the latest reported Probability.
+    *   *Why it wins*: The network learns to predict the *correction* (trend) rather than learning the absolute value from scratch.
+    *   *Result*: **Validation Loss: `3.0e-6`**. A **5x improvement** in accuracy and faster convergence.
+
+### 3. Actionable Outputs (The Dashboard)
+We don't just output a probability number. We generate **Actionable Intelligence**:
+
+1.  🚦 **Traffic Light Status**:
+    *   **RED**: High Probability (>1e-4) OR Critical Miss Distance (<1km). Immediate review.
+    *   **YELLOW**: Elevated risk (>1e-5). Monitor closely.
+    *   **GREEN**: Routine.
+
+2.  ⏳ **Time of Last Opportunity (TLO)**:
+    *   Calculates `Hours_To_Decision`.
+    *   *Formula*: `TCA - Reaction_Time (e.g., 6h) - Message_Received_Time`.
+    *   Tells the operator: *"You have 11.8 hours left to upload a maneuver."*
+
+3.  📈 **Risk Trend**:
+    *   Identifies if the risk is `INCREASING`, `DECREASING`, or `STABLE` compared to the previous update.
+
+4.  🔮 **"History of the Future" Visualization**:
+    *   For every high-risk event, the system automatically plots the specific history of that conjunction, identifying the exact moment the AI prediction deviates from the trend.
+    *   includes **Certainty Estimation** (using Monte Carlo Dropout) to quantify confidence.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-## 🎯 Quick Start
+### 2. Configuration (`config.yaml`)
+Customize your risk thresholds and model parameters:
+```yaml
+model:
+  type: "LSTM_SKIP"  # The high-performance architecture
+  sequence_length: 5
 
-### 1. Training the Model
-Train the LSTM network on your CDM JSON data. This processes the data, generates sequences, and optimizes the model.
-```bash
-python main.py --mode train
+thresholds:
+  high_risk: 0.0001        # Risk > 1e-4 triggers RED
+  reaction_time_hours: 6   # How long your ops team needs
 ```
-*The model will be saved to `models/lstm_model.pth`.*
 
-### 2. Running Inference
-Generate risk predictions and certainty scores for the dataset.
+### 3. Run Inference (The Dashboard)
+Run the full pipeline to process data and generate the dashboard:
 ```bash
 python main.py --mode inference
 ```
-*Results will be saved to `results/predictions_lstm.csv`.*
+*   **Output CSV**: `results/predictions_dashboard.csv` (Contains TLO, Status, Trend)
+*   **Plots**: Check the `plots/` directory for trend visualizations.
 
-## ⚙️ Configuration
-
-Customize the system behavior in `config.yaml`:
-
-```yaml
-data:
-  json_path: "data/download.json"  # Path to your CDM data
-
-model:
-  type: "LSTM"
-  sequence_length: 5               # Number of updates to look back
-  hidden_size: 64                  # Size of LSTM hidden layer
-  num_layers: 2                    # Number of stacked LSTM layers
-
-training:
-  epochs: 50
-  learning_rate: 0.01
+### 4. Training (Optional)
+To retrain the model on new datasets:
+```bash
+python main.py --mode train
 ```
 
-## 🏗️ Project Structure
+---
 
-```
-collision-risk-ai/
-├── app/
-│   ├── pipeline/
-│   │   ├── datasource.py       # Data loading (JSON/API)
-│   │   └── preprocessor.py     # Sequence generation & grouping
-│   ├── model/
-│   │   └── lstm_model.py       # PyTorch LSTM architecture
-├── data/
-│   └── download.json           # Input data
-├── models/                     # Saved model artifacts
-├── results/                    # Inference output
-├── logs/                       # Execution logs
-├── config.yaml                 # Configuration
-├── main.py                     # Entry point
-└── requirements.txt            # Dependencies
-```
+## 📊 Final Output Example
+
+| Event | TCA | Risk Status | Hours to Decision | Trend | AI Certainty |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Sat A vs Sat B** | Dec 25, 12:00 | **RED** 🛑 | **4.5 hrs** left | **INCREASING** 📈 | **98%** |
+| **Sat X vs Sat Y** | Dec 26, 09:00 | **GREEN** ✅ | 28.0 hrs left | **DECREASING** 📉 | **99%** |
+
+---
 
 ## 👥 Authors
-- Mostafa & NEO-FLUX Team 
-
-## 📜 License
-MIT License
+**Mostafa & NEO-FLUX Team** - *Hackathons/ActInSpace*
