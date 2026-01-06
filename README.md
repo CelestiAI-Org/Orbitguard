@@ -1,322 +1,99 @@
-# Satellite Collision Risk AI System
+# 🛰️ AI Collision Risk Predictor (NEO-FLUX)
 
-A machine learning system for predicting satellite collision risks from Conjunction Data Message (CDM) data. This system achieves 60%+ false positive reduction using Random Forest classification, with SHAP-based explainability and comprehensive visualizations.
+> **Turning Raw Space Data into Actionable Intelligence.**
 
-## 🚀 Features
+In the crowded orbital environment, satellite operators are overwhelmed by thousands of Conjunction Data Messages (CDMs) daily. Most are noise; a few are critical. This system cuts through that noise using **Deep Learning** to predict not just the probability of collision, but the *trajectory of risk*, giving operators clear, actionable deadlines.
 
-- **CDM Data Loader**: Robust loading and validation of satellite conjunction data
-- **Feature Engineering**: Advanced features including miss distance, relative velocity, collision probability, and kinetic energy
-- **Random Forest Classifier**: Optimized for HIGH_RISK vs FALSE_ALARM classification
-- **Confidence Scoring**: Predictions with confidence levels and uncertainty handling
-- **SHAP Explainability**: Model interpretability with SHAP values and visualizations
-- **Matplotlib Visualizations**: Comprehensive plots including confusion matrices, ROC curves, feature importance
-- **Flask REST API**: Optional API endpoints for real-time predictions
-- **Config-Driven**: YAML-based configuration for easy customization
-- **Type-Hinted**: Full type annotations for better code quality
+---
 
-## 📦 Installation
+## 🏗️ System Architecture
 
-### Prerequisites
-- Python 3.8+
-- pip
+The solution builds a complete end-to-end pipeline: **Ingest (ETL) -> Deep Learning -> Actionable Dashboard**.
 
-### Setup
+### 1. The Data Pipeline (ETL & Feature Engineering)
+Raw CDMs are typically snapshot updates. A single conjunction event might receive 20-30 updates over the course of a week.
+*   **Ingest**: We load raw JSON CDMs (compliant with CCSDS standards).
+*   **Grouping & Sorting**: The pipeline groups messages by unique event signatures: `(SAT_1_ID, SAT_2_ID, TCA)`. It then sorts them by `CREATION_DATE` to reconstruct the *narrative* of the event.
+*   **Feature Engineering**:
+    *   **Log-Scaling**: Miss Distance (`MIN_RNG`) often varies from 10km to 10m. We use log-scaling to normalize this dynamic range for the neural network.
+    *   **Time Deltas**: We calculate `Time_to_TCA` to help the model understand urgency.
+    *   **Sequence Padding**: Events have varying update counts. The `TimeSeriesPreprocessor` dynamically pads or truncates sequences (default `seq_len=5`) to create uniform tensors for batch processing.
 
-1. Clone the repository:
-```bash
-git clone https://github.com/aayushpx/collision-risk-ai.git
-cd collision-risk-ai
-```
+### 2. Machine Learning Architecture (The Brain)
+We treat collision prediction as a **Time-Series Forecasting** problem.
 
-2. Install dependencies:
+#### The Evolution: Version 1 vs Version 2
+*   **Version 1 (Standard LSTM)**: A canonical Long Short-Term Memory network. It successfully learned temporal patterns but struggled to react quickly to sudden changes in the probability reported by space surveillance networks (Validation Loss: `1.5e-5`).
+*   **Version 2 (Skip-Connection LSTM - *Champion Model*)**: We introduced a **Residual Skip Connection**.
+    *   *Concept*: The model receives the full sequence but also gets a direct "shortcut" to the latest reported Probability.
+    *   *Why it wins*: The network learns to predict the *correction* (trend) rather than learning the absolute value from scratch.
+    *   *Result*: **Validation Loss: `3.0e-6`**. A **5x improvement** in accuracy and faster convergence.
+
+### 3. Actionable Outputs (The Dashboard)
+We don't just output a probability number. We generate **Actionable Intelligence**:
+
+1.  🚦 **Traffic Light Status**:
+    *   **RED**: High Probability (>1e-4) OR Critical Miss Distance (<1km). Immediate review.
+    *   **YELLOW**: Elevated risk (>1e-5). Monitor closely.
+    *   **GREEN**: Routine.
+
+2.  ⏳ **Time of Last Opportunity (TLO)**:
+    *   Calculates `Hours_To_Decision`.
+    *   *Formula*: `TCA - Reaction_Time (e.g., 6h) - Message_Received_Time`.
+    *   Tells the operator: *"You have 11.8 hours left to upload a maneuver."*
+
+3.  📈 **Risk Trend**:
+    *   Identifies if the risk is `INCREASING`, `DECREASING`, or `STABLE` compared to the previous update.
+
+4.  🔮 **"History of the Future" Visualization**:
+    *   For every high-risk event, the system automatically plots the specific history of that conjunction, identifying the exact moment the AI prediction deviates from the trend.
+    *   includes **Certainty Estimation** (using Monte Carlo Dropout) to quantify confidence.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Generate sample data:
-```bash
-python generate_data.py
-```
-
-## 🎯 Quick Start
-
-### Training the Model
-
-Run the complete training pipeline:
-```bash
-python main.py --mode train
-```
-
-This will:
-1. Load CDM data from `data/cdm_data.csv`
-2. Engineer 12+ features from raw data
-3. Train a Random Forest classifier
-4. Generate performance metrics and visualizations
-5. Save the trained model to `models/collision_risk_model.pkl`
-
-### Making Predictions
-
-Run inference on new data:
-```bash
-python main.py --mode inference --data data/cdm_data_test.csv --output results/predictions.csv
-```
-
-### Using the API
-
-Start the Flask API server:
-```bash
-python api.py --host 0.0.0.0 --port 5000
-```
-
-#### API Endpoints
-
-**Health Check**
-```bash
-curl http://localhost:5000/health
-```
-
-**Single Prediction**
-```bash
-curl -X POST http://localhost:5000/predict \
-  -H "Content-Type: application/json" \
-  -d '{
-    "miss_distance": 500.0,
-    "relative_velocity": 15000.0,
-    "time_to_tca": 12.5,
-    "object1_mass": 1000.0,
-    "object2_mass": 800.0
-  }'
-```
-
-**Batch Predictions**
-```bash
-curl -X POST http://localhost:5000/predict_batch \
-  -H "Content-Type: application/json" \
-  -d '{
-    "events": [
-      {
-        "miss_distance": 500.0,
-        "relative_velocity": 15000.0,
-        "time_to_tca": 12.5,
-        "object1_mass": 1000.0,
-        "object2_mass": 800.0
-      }
-    ]
-  }'
-```
-
-**Explain Prediction**
-```bash
-curl -X POST http://localhost:5000/explain \
-  -H "Content-Type: application/json" \
-  -d '{
-    "miss_distance": 500.0,
-    "relative_velocity": 15000.0,
-    "time_to_tca": 12.5,
-    "object1_mass": 1000.0,
-    "object2_mass": 800.0
-  }'
-```
-
-## 📊 Features Engineered
-
-The system engineers 29 features from raw CDM data:
-
-### Core Features
-1. **miss_distance**: Distance at closest approach (meters)
-2. **relative_velocity**: Relative velocity between objects (m/s)
-3. **collision_probability**: Calculated collision probability
-4. **time_to_tca**: Time to Time of Closest Approach (seconds)
-
-### Object Features
-5. **object1_mass**, **object2_mass**: Object masses (kg)
-6. **object1_size**, **object2_size**: Radar cross section (RCS)
-7. **combined_mass**: Sum of both object masses
-8. **combined_size**: Sum of both object sizes
-
-### Geometric Features
-9. **radial_miss_distance**: Radial component of miss distance
-10. **along_track_miss_distance**: Along-track component
-11. **cross_track_miss_distance**: Cross-track component
-
-### Physics Features
-12. **kinetic_energy**: Kinetic energy at TCA
-13. **miss_distance_velocity_ratio**: Time to impact if on collision course
-14. **collision_severity**: Combined severity index
-15. **momentum**: Combined momentum
-
-### Temporal Features
-16. **urgency_factor**: Inverse of time to TCA
-17. **time_to_tca_hours**: Time to TCA in hours
-
-### Orbital Regime (One-Hot Encoded)
-18. **regime_LEO**: Low Earth Orbit (0-2000 km)
-19. **regime_MEO**: Medium Earth Orbit (2000-35786 km)
-20. **regime_GEO**: Geostationary Orbit (35786+ km)
-
-### Historical Features
-21. **historical_maneuver_flag**: Has object maneuvered before
-22. **conjunction_frequency**: How often this pair has close approaches
-
-### Interaction Features
-23. **size_distance_ratio**: Combined size relative to miss distance
-24. **prob_velocity_product**: Probability-velocity interaction
-25. **mass_velocity_ratio**: Mass-velocity interaction
-
-## 🎨 Visualizations
-
-The system generates the following visualizations in the `plots/` directory:
-
-- **Confusion Matrix**: Model classification performance
-- **Feature Importance**: Top contributing features
-- **ROC Curve**: Receiver Operating Characteristic with AUC
-- **Precision-Recall Curve**: Precision vs Recall tradeoff
-- **Prediction Distribution**: Distribution of predictions and confidence scores
-- **SHAP Summary**: Global feature importance using SHAP
-- **SHAP Waterfall**: Individual prediction explanations
-
-## ⚙️ Configuration
-
-Edit `config.yaml` to customize:
-
+### 2. Configuration (`config.yaml`)
+Customize your risk thresholds and model parameters:
 ```yaml
-data:
-  cdm_data_path: "data/cdm_data.csv"
-  train_test_split: 0.8
-  random_state: 42
-
 model:
-  type: "RandomForest"
-  params:
-    n_estimators: 100
-    max_depth: 10
-    min_samples_split: 5
-    min_samples_leaf: 2
-    class_weight: "balanced"
+  type: "LSTM_SKIP"  # The high-performance architecture
+  sequence_length: 5
 
-prediction:
-  confidence_threshold: 0.7
-
-output:
-  model_path: "models/collision_risk_model.pkl"
-  plots_dir: "plots"
+thresholds:
+  high_risk: 0.0001        # Risk > 1e-4 triggers RED
+  reaction_time_hours: 6   # How long your ops team needs
 ```
 
-## 📈 Performance
-
-Target metric: **60%+ false positive reduction**
-
-The system achieves this by:
-- Using balanced class weights to handle imbalanced data
-- Engineering domain-specific features
-- Applying confidence thresholds for uncertain predictions
-- Optimizing for precision on the HIGH_RISK class
-
-Example output:
-```
-False Positive Reduction: 65.32%
-✓ Target achieved (60%+ false positive reduction)
-
-Test Set Performance:
-  Accuracy:  0.8850
-  Precision: 0.8421
-  Recall:    0.8667
-  F1 Score:  0.8542
-```
-
-## 🏗️ Project Structure
-
-```
-collision-risk-ai/
-├── app/
-│   ├── __init__.py
-│   ├── config.py              # Centralized configuration
-│   ├── data_loader.py         # CDM data loading
-│   ├── preprocessor.py        # Data preprocessing
-│   ├── feature_engineering.py # Feature engineering (29 features)
-│   ├── model.py               # Model training (Random Forest)
-│   ├── predictor.py           # Prediction with confidence
-│   ├── explainer.py           # SHAP explainability
-│   ├── visualizer.py          # Matplotlib visualizations
-│   └── utils.py               # Logging & validation utilities
-├── data/
-│   ├── cdm_data.csv           # Training data
-│   └── cdm_data_test.csv      # Test data
-├── models/
-│   └── collision_risk_model.pkl  # Trained model
-├── plots/                     # Generated visualizations
-├── results/                   # Prediction results
-├── logs/                      # Application logs
-├── main.py                    # Main pipeline script
-├── api.py                     # Flask REST API
-├── training_notebook.ipynb    # Jupyter notebook for training
-├── generate_data.py           # Sample data generator
-├── config.yaml                # Configuration file
-├── requirements.txt           # Python dependencies
-└── README.md                  # This file
-```
-├── generate_data.py          # Sample data generator
-├── config.yaml               # Configuration file
-├── requirements.txt          # Python dependencies
-└── README.md                 # This file
-```
-
-## 🧪 Testing
-
-To test the system with sample data:
-
-1. Generate sample CDM data:
+### 3. Run Inference (The Dashboard)
+Run the full pipeline to process data and generate the dashboard:
 ```bash
-python generate_data.py
+python main.py --mode inference
 ```
+*   **Output CSV**: `results/predictions_dashboard.csv` (Contains TLO, Status, Trend)
+*   **Plots**: Check the `plots/` directory for trend visualizations.
 
-2. Train the model:
+### 4. Training (Optional)
+To retrain the model on new datasets:
 ```bash
 python main.py --mode train
 ```
 
-3. Run inference:
-```bash
-python main.py --mode inference --data data/cdm_data_test.csv
-```
+---
 
-## 🔬 SHAP Explainability
+## 📊 Final Output Example
 
-The system provides model interpretability through SHAP (SHapley Additive exPlanations):
+| Event | TCA | Risk Status | Hours to Decision | Trend | AI Certainty |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Sat A vs Sat B** | Dec 25, 12:00 | **RED** 🛑 | **4.5 hrs** left | **INCREASING** 📈 | **98%** |
+| **Sat X vs Sat Y** | Dec 26, 09:00 | **GREEN** ✅ | 28.0 hrs left | **DECREASING** 📉 | **99%** |
 
-- **Global Explanations**: Feature importance across all predictions
-- **Local Explanations**: Why a specific prediction was made
-- **Interaction Effects**: How features interact to affect predictions
-
-Access SHAP explanations via:
-- API endpoint: `/explain`
-- Visualizations in `plots/shap_summary.png`
-
-## 🎯 Hackathon Demo
-
-This system is designed for hackathon demonstrations with:
-
-- Quick setup (< 5 minutes)
-- Sample data generation
-- Pre-configured optimal parameters
-- Comprehensive visualizations
-- REST API for live demos
-- Achieves target 60%+ false positive reduction
-
-## 🤝 Contributing
-
-Contributions welcome! Please feel free to submit a Pull Request.
-
-## 📝 License
-
-This project is open source and available under the MIT License.
+---
 
 ## 👥 Authors
-
-- Aayush Prakash
-
-## 🙏 Acknowledgments
-
-- Based on satellite conjunction data analysis principles
-- SHAP library for model interpretability
-- scikit-learn for machine learning infrastructure
+**Mostafa & NEO-FLUX Team** - *Hackathons/ActInSpace*

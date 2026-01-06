@@ -1,44 +1,22 @@
-# Satellite Collision Risk ML Configuration
-
 data:
-  cdm_data_path: "data/cdm_data.csv"
-  train_test_split: 0.8
-  random_state: 42
-
-features:
-  # Features to engineer from CDM data
-  use_features:
-    - "miss_distance"
-    - "relative_velocity"
-    - "collision_probability"
-    - "time_to_tca"
-    - "combined_mass"
-    - "radial_miss_distance"
-    - "along_track_miss_distance"
-    - "cross_track_miss_distance"
+  json_path: "data/download.json"
 
 model:
-  type: "RandomForest"
-  params:
-    n_estimators: 100
-    max_depth: 10
-    min_samples_split: 5
-    min_samples_leaf: 2
-    random_state: 42
-    class_weight: "balanced"
-  
-  # Target metric: 60%+ false positive reduction
-  target_fp_reduction: 0.6
+  type: "LSTM_SKIP" # Options: "LSTM", "LSTM_SKIP"
+  sequence_length: 5
+  hidden_size: 64
+  num_layers: 2
 
-prediction:
-  confidence_threshold: 0.7
-  
+training:
+  epochs: 50
+  learning_rate: 0.01
+
 output:
-  model_path: "models/collision_risk_model.pkl"
+  model_path: "models/lstm_skip_v1.pth"
   plots_dir: "plots"
-  results_dir: "results"
 
-api:
-  host: "0.0.0.0"
-  port: 5000
-  debug: false
+thresholds:
+  high_risk: 0.0001        # 1e-4 (RED)
+  medium_risk: 0.00001     # 1e-5 (YELLOW)
+  reaction_time_hours: 6   # Minimum time required to maneuver
+  miss_distance_critical: 1000.0 # meters
