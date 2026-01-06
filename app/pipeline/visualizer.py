@@ -18,7 +18,8 @@ class RiskVisualizer:
                         predicted_pc: float, 
                         tca: pd.Timestamp,
                         thresholds: Dict[str, float], 
-                        filename: str):
+                        filename: str,
+                        certainty: Optional[float] = None):
         """
         Generates and saves a plot of PC evolution vs Time.
         
@@ -28,6 +29,7 @@ class RiskVisualizer:
             tca: Time of Closest Approach (for context).
             thresholds: Dict containing 'high_risk', 'medium_risk'.
             filename: Name of the file to save (e.g., 'event_123.png').
+            certainty: Optional certainty score (0-1) to display.
         """
         try:
             plt.figure(figsize=(10, 6))
@@ -41,9 +43,14 @@ class RiskVisualizer:
             # Handle log scale for 0 probability
             plot_val = predicted_pc if predicted_pc > 1e-30 else 1e-30
             
+            # Label with certainty if available
+            label = 'AI Prediction'
+            if certainty is not None:
+                label += f' (Cert: {certainty:.2f})'
+            
             # We plot the prediction at the "current simulated time" (which is effectively the last history point or slightly after)
             last_time = hist['CREATED'].max()
-            plt.plot(last_time, plot_val, marker='*', markersize=15, color='purple', label='AI Prediction', linestyle='None')
+            plt.plot(last_time, plot_val, marker='*', markersize=15, color='purple', label=label, linestyle='None')
             
             # 3. Thresholds
             plt.axhline(y=thresholds['high_risk'], color='red', linestyle='--', label='High Risk Threshold')

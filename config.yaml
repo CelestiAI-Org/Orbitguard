@@ -2,7 +2,7 @@ data:
   json_path: "data/download.json"
 
 model:
-  type: "LSTM"
+  type: "LSTM_SKIP" # Options: "LSTM", "LSTM_SKIP"
   sequence_length: 5
   hidden_size: 64
   num_layers: 2
@@ -12,7 +12,7 @@ training:
   learning_rate: 0.01
 
 output:
-  model_path: "models/lstm_model.pth"
+  model_path: "models/lstm_skip_v1.pth"
   plots_dir: "plots"
 
 thresholds:

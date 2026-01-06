@@ -72,7 +72,8 @@ class TimeSeriesPreprocessor:
                 'SAT_2_ID': sat2_id,
                 'TCA': tca_time,
                 'LATEST_MIN_RNG': group['MIN_RNG'].iloc[-1] if 'MIN_RNG' in group else None,
-                'LATEST_PC': latest_pc
+                'LATEST_PC': latest_pc,
+                'LATEST_CREATED': group['CREATED'].iloc[-1]
             })
             
             # Keep history for trend calculations

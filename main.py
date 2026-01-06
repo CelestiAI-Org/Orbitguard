@@ -10,7 +10,7 @@ from pathlib import Path
 
 from app.pipeline.datasource import JsonFileDataSource
 from app.pipeline.preprocessor import TimeSeriesPreprocessor
-from app.model.lstm_model import CollisionRiskLSTM, CertaintyEstimator
+from app.model.lstm_model import CollisionRiskLSTM, CollisionRiskSkipLSTM, CertaintyEstimator
 from app.pipeline.visualizer import RiskVisualizer
 
 # Configure logging
@@ -40,7 +40,7 @@ def train(config):
     # 2. Preprocess
     seq_len = config['model']['sequence_length']
     preprocessor = TimeSeriesPreprocessor(sequence_length=seq_len)
-    sequences, targets = preprocessor.process(raw_data)
+    sequences, targets, _, _ = preprocessor.process(raw_data)
     
     if len(sequences) == 0:
         logger.error("No sequences generated. Exiting.")
@@ -56,11 +56,21 @@ def train(config):
     y_train, y_val = y[:split_idx], y[split_idx:]
     
     # 3. Model Setup
-    model = CollisionRiskLSTM(
-        input_size=3, # PC, MinRng, TimeToTCA
-        hidden_size=config['model']['hidden_size'],
-        num_layers=config['model']['num_layers']
-    )
+    model_type = config['model'].get('type', 'LSTM')
+    logger.info(f"Initializing model: {model_type}")
+    
+    if model_type == 'LSTM_SKIP':
+        model = CollisionRiskSkipLSTM(
+            input_size=3,
+            hidden_size=config['model']['hidden_size'],
+            num_layers=config['model']['num_layers']
+        )
+    else:
+        model = CollisionRiskLSTM(
+            input_size=3, # PC, MinRng, TimeToTCA
+            hidden_size=config['model']['hidden_size'],
+            num_layers=config['model']['num_layers']
+        )
     
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=config['training']['learning_rate'])
@@ -107,11 +117,21 @@ def inference(config, no_plots=False):
     X = torch.tensor(np.array(sequences), dtype=torch.float32)
     
     # 3. Load Model
-    model = CollisionRiskLSTM(
-        input_size=3,
-        hidden_size=config['model']['hidden_size'],
-        num_layers=config['model']['num_layers']
-    )
+    model_type = config['model'].get('type', 'LSTM')
+    logger.info(f"Loading model architecture: {model_type}")
+    
+    if model_type == 'LSTM_SKIP':
+        model = CollisionRiskSkipLSTM(
+            input_size=3,
+            hidden_size=config['model']['hidden_size'],
+            num_layers=config['model']['num_layers']
+        )
+    else:
+        model = CollisionRiskLSTM(
+            input_size=3,
+            hidden_size=config['model']['hidden_size'],
+            num_layers=config['model']['num_layers']
+        )
     model.load_state_dict(torch.load(config['output']['model_path']))
     model.eval()
     
@@ -140,17 +160,8 @@ def inference(config, no_plots=False):
     reaction_time = config['thresholds']['reaction_time_hours']
     critical_dist = config['thresholds']['miss_distance_critical']
     
-    # Current time simulation
-    all_creation_dates = []
-    for h in histories:
-        if not h.empty:
-            all_creation_dates.extend(h['CREATED'])
-    
-    if all_creation_dates:
-        current_time_sim = max(all_creation_dates)
-    else:
-        from datetime import datetime
-        current_time_sim = datetime.utcnow()
+    # Current time simulation - No longer needed as we use per-event LATEST_CREATED
+    # all_creation_dates = [] ...
     
     # Initialize Visualizer
     visualizer = RiskVisualizer(output_dir=config['output']['plots_dir'])
@@ -172,8 +183,12 @@ def inference(config, no_plots=False):
             
         # B. Time of Last Opportunity (TLO)
         tca = meta['TCA']
+        latest_msg_time = meta['LATEST_CREATED']
         tlo = tca - pd.Timedelta(hours=reaction_time)
-        hours_remaining = (tlo - current_time_sim).total_seconds() / 3600.0
+        
+        # Calculate time remaining relative to when the message was received
+        # Positive = You have time capability. Negative = Too late.
+        hours_remaining = (tlo - latest_msg_time).total_seconds() / 3600.0
         
         # C. Risk Trend
         hist = histories[i]
@@ -203,7 +218,8 @@ def inference(config, no_plots=False):
                 predicted_pc=pred_pc,
                 tca=tca,
                 thresholds=thresholds_dict,
-                filename=fname
+                filename=fname,
+                certainty=certainties[i]
             )
                 
         results.append({
