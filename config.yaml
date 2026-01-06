@@ -2,7 +2,7 @@ data:
   json_path: "data/download.json"
 
 model:
-  type: "LSTM"
+  type: "LSTM_SKIP" # Options: "LSTM", "LSTM_SKIP"
   sequence_length: 5
   hidden_size: 64
   num_layers: 2
@@ -12,5 +12,11 @@ training:
   learning_rate: 0.01
 
 output:
-  model_path: "models/lstm_model.pth"
+  model_path: "models/lstm_skip_v1.pth"
   plots_dir: "plots"
+
+thresholds:
+  high_risk: 0.0001        # 1e-4 (RED)
+  medium_risk: 0.00001     # 1e-5 (YELLOW)
+  reaction_time_hours: 6   # Minimum time required to maneuver
+  miss_distance_critical: 1000.0 # meters
