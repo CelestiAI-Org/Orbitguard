@@ -1,8 +1,8 @@
-# 🛰️ AI Collision Risk Predictor (NEO-FLUX)
+# 🛰️ AI Collision Risk Classifier
 
 > **Turning Raw Space Data into Actionable Intelligence.**
 
-In the crowded orbital environment, satellite operators are overwhelmed by thousands of Conjunction Data Messages (CDMs) daily. Most are noise; a few are critical. This system cuts through that noise using **Deep Learning** to predict not just the probability of collision, but the *trajectory of risk*, giving operators clear, actionable deadlines.
+In the crowded orbital environment, satellite operators are overwhelmed by thousands of Conjunction Data Messages (CDMs) daily. Most are noise; a few are critical. This system cuts through that noise using **Deep Learning** to analyse not just the probability of collision, but the *evolution of risk over time*, giving operators clear, actionable deadlines.
 
 ---
 
@@ -20,13 +20,12 @@ Raw CDMs are typically snapshot updates. A single conjunction event might receiv
     *   **Sequence Padding**: Events have varying update counts. The `TimeSeriesPreprocessor` dynamically pads or truncates sequences (default `seq_len=5`) to create uniform tensors for batch processing.
 
 ### 2. Machine Learning Architecture (The Brain)
-We treat collision prediction as a **Time-Series Forecasting** problem.
+We treat conjunction risk classification as a **Time-Series Forecasting** problem.
 
 #### The Evolution: Version 1 vs Version 2
 *   **Version 1 (Standard LSTM)**: A canonical Long Short-Term Memory network. It successfully learned temporal patterns but struggled to react quickly to sudden changes in the probability reported by space surveillance networks (Validation Loss: `1.5e-5`).
 *   **Version 2 (Skip-Connection LSTM - *Champion Model*)**: We introduced a **Residual Skip Connection**.
     *   *Concept*: The model receives the full sequence but also gets a direct "shortcut" to the latest reported Probability.
-    *   *Why it wins*: The network learns to predict the *correction* (trend) rather than learning the absolute value from scratch.
     *   *Result*: **Validation Loss: `3.0e-6`**. A **5x improvement** in accuracy and faster convergence.
 
 ### 3. Actionable Outputs (The Dashboard)
@@ -46,7 +45,7 @@ We don't just output a probability number. We generate **Actionable Intelligence
     *   Identifies if the risk is `INCREASING`, `DECREASING`, or `STABLE` compared to the previous update.
 
 4.  🔮 **"History of the Future" Visualization**:
-    *   For every high-risk event, the system automatically plots the specific history of that conjunction, identifying the exact moment the AI prediction deviates from the trend.
+    *   For every high-risk event, the system automatically plots the specific history of that conjunction, identifying the exact moment the PC deviates from the trend.
     *   includes **Certainty Estimation** (using Monte Carlo Dropout) to quantify confidence.
 
 ---
