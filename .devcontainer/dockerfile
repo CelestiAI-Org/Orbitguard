@@ -1,0 +1,9 @@
+FROM python:3.10
+WORKDIR /src
+COPY ./backend/requirements.txt .
+COPY ./frontend/package.json .
+RUN apt update && apt install -y nodejs npm
+RUN pip install --upgrade pip && pip install -Ur requirements.txt
+# RUN npm install && npm install -g typescript
+EXPOSE 4000-9000
+
