@@ -2,12 +2,12 @@
 
 # Start backend in background
 echo "Starting backend..."
-cd backend && python -m app.main &
+cd app/backend && python -m srt.main &
 BACKEND_PID=$!
 
 # Start frontend
 echo "Starting frontend..."
-cd frontend && npm run dev &
+cd app/frontend && npm run dev &
 FRONTEND_PID=$!
 
 # Handle cleanup on exit
