@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Start backend in background
-echo "Starting backend..."
-cd app/backend && python -m srt.main &
+# Start backend API server in background
+echo "Starting backend API server..."
+cd app/backend && python src/api.py &
 BACKEND_PID=$!
 
 # Start frontend

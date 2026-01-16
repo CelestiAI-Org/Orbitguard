@@ -187,7 +187,7 @@ export default function App() {
                <div className="p-4 flex flex-col items-center justify-center text-red-400 space-y-2">
                   <WifiOff className="w-6 h-6" />
                   <span className="text-xs text-center">Backend Connection Failed</span>
-                  <span className="text-[10px] text-slate-500 text-center">Ensure Python API is running on localhost:8000</span>
+                  <span className="text-[10px] text-slate-500 text-center">Ensure Python API is running on localhost:5000</span>
                </div>
             )}
 
