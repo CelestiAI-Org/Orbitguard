@@ -1,5 +1,5 @@
 data:
-  json_path: "data/download.json"
+  json_path: "../data/download.json"
 
 model:
   type: "LSTM_SKIP" # Options: "LSTM", "LSTM_SKIP"
@@ -12,7 +12,7 @@ training:
   learning_rate: 0.01
 
 output:
-  model_path: "models/lstm_skip_v1.pth"
+  model_path: "../models/lstm_skip_v1.pth"
   plots_dir: "plots"
 
 thresholds:

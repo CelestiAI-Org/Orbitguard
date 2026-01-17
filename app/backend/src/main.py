@@ -8,17 +8,17 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-from app.pipeline.datasource import JsonFileDataSource
-from app.pipeline.preprocessor import TimeSeriesPreprocessor
-from app.model.lstm_model import CollisionRiskLSTM, CollisionRiskSkipLSTM, CertaintyEstimator
-from app.pipeline.visualizer import RiskVisualizer
+from src.pipeline.datasource import JsonFileDataSource
+from src.pipeline.preprocessor import TimeSeriesPreprocessor
+from src.model.lstm_model import CollisionRiskLSTM, CollisionRiskSkipLSTM, CertaintyEstimator
+from src.pipeline.visualizer import RiskVisualizer
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler("logs/app.log"),
+        logging.FileHandler("../logs/app.log"),
         logging.StreamHandler()
     ]
 )
@@ -236,7 +236,7 @@ def inference(config, no_plots=False):
         
     # Save results
     res_df = pd.DataFrame(results)
-    res_path = "results/predictions_dashboard.csv"
+    res_path = Path(__file__).parent.parent / "results" / "predictions_dashboard.csv"
     res_df.to_csv(res_path, index=False)
     logger.info(f"Dashboard Data saved to {res_path}")
     print(res_df.head(10))

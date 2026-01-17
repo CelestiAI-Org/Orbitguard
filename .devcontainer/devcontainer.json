@@ -1,0 +1,31 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "ActInSpace Hackathon",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	// "image": "python:3.14.2",
+	"build": {
+        // Path is relative to the devcontainer.json file.
+        "dockerfile": "./dockerfile",
+		"context": ".."
+    },
+
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"settings": {},
+			"extensions": [
+				"ms-toolsai.jupyter",
+				"ms-python.python"
+			]
+		}
+	},
+
+	"runArgs": [
+		"--gpus=all"
+	],
+
+	"postCreateCommand": "cd app/frontend && npm install",
+
+	"remoteUser": "root"
+}

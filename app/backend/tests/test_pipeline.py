@@ -1,5 +1,5 @@
-from app.pipeline.datasource import JsonFileDataSource
-from app.pipeline.preprocessor import TimeSeriesPreprocessor
+from src.pipeline.datasource import JsonFileDataSource
+from src.pipeline.preprocessor import TimeSeriesPreprocessor
 import numpy as np
 
 def test_pipeline():

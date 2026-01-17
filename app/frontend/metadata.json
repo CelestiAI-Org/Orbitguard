@@ -1,0 +1,5 @@
+{
+  "name": "OrbitalGuard",
+  "description": "Mission-critical satellite collision risk assessment dashboard featuring LSTM-based predictive analytics and AI-driven decision support.",
+  "requestFramePermissions": []
+}
