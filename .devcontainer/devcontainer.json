@@ -25,7 +25,7 @@
 		"--gpus=all"
 	],
 
-	"postCreateCommand": "cd frontend && npm install",
+	"postCreateCommand": "cd app/frontend && npm install",
 
 	"remoteUser": "root"
 }
