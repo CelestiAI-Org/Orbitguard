@@ -29,7 +29,7 @@ def cdms():
         
         # Transform raw CDM data to ConjunctionEvent format
         transformed_events = []
-        num = 0
+        # num = 0
         for cdm in raw_data:
             event = {
                 "id": cdm.get("CDM_ID", "unknown"),
@@ -58,9 +58,9 @@ def cdms():
                 }],
                 "exclusionVolume": f"SAT1: {cdm.get('SAT_1_EXCL_VOL', 'N/A')} km | SAT2: {cdm.get('SAT_2_EXCL_VOL', 'N/A')} km"
             }
-            print(f"Transformed event {num}: {event['id']}, PC: {event['collisionProb']}")
+            # print(f"Transformed event {num}: {event['id']}, PC: {event['collisionProb']}")
             transformed_events.append(event)
-            num += 1
+            # num += 1
         
         return flask.jsonify(transformed_events)
     except FileNotFoundError:
@@ -95,6 +95,15 @@ def predictions():
         return flask.jsonify(predictions_data)
     except Exception as e:
         return flask.jsonify({"error": str(e)}), 500
+    
+
+@app.route("/risk-summary", methods=['GET'])
+def risk_summary():
+    """Return a summary of risk levels from the latest predictions"""
+    id = flask.request.args.get('cdm_id')
+    summary = f"Risk summary of CDM ID: {id}"
+    return flask.jsonify({"summary": summary})
+    
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
