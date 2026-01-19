@@ -89,8 +89,9 @@ python main.py --mode train
 
 | Event | TCA | Risk Status | Hours to Decision | Trend | AI Certainty |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Sat A vs Sat B** | Dec 25, 12:00 | **RED** 🛑 | **4.5 hrs** left | **INCREASING** 📈 | **98%** |
-| **Sat X vs Sat Y** | Dec 26, 09:00 | **GREEN** ✅ | 28.0 hrs left | **DECREASING** 📉 | **99%** |
+| **Sat A vs Sat B** | Dec 25, 12:00 | **ESCALATING** 🛑 | **4.5 hrs** left | **INCREASING** 📈 | **98%** |
+| **Sat X vs Sat Y** | Dec 26, 09:00 | **RESOLVING** ✅ | 28.0 hrs left | **DECREASING** 📉 | **99%** |
+| **Sat Z vs Sat T** | Dec 25, 12:00 | **STABLE** 🛑 | **4.5 hrs** left | **STABLE** 📈 | **98%** |
 
 ---
 
