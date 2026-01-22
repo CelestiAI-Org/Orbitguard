@@ -84,3 +84,4 @@ dist-ssr
 *.sln
 *.sw?
 app/data/download.json
+.env
