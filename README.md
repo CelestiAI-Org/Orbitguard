@@ -52,12 +52,44 @@ We don't just output a probability number. We generate **Actionable Intelligence
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
+### 1. Open project in [devcontainer](https://containers.dev/)
+Python & npm dependencies will be installed automatically for development
 
-### 2. Configuration (`config.yaml`)
+### 2. Environment file
+
+1. Create a `.env` file 
+2. Add the following to it:
+    ```
+    # Collision Risk AI Configuration
+
+    # Backend Configuration
+    BACKEND_PORT=PORT
+
+    # Frontend Configuration
+    FRONTEND_PORT=PORT
+
+    # Gemini API (optional)
+    GEMINI_API_KEY=API_KEY_HERE
+    ```
+3. Replace `PORT` & `API_KEY_HERE`
+
+### 3. Start up script
+
+1. Make the `start.sh` script executable
+    ```bash
+    chmod +x ./start.sh
+    ```
+
+2. Run script to start application
+    ```bash
+    ./start.sh
+    ```
+
+---
+### 🖥️ Machine learning
+---
+
+### 1. Configuration (`app/backend/config.yaml`)
 Customize your risk thresholds and model parameters:
 ```yaml
 model:
@@ -69,18 +101,18 @@ thresholds:
   reaction_time_hours: 6   # How long your ops team needs
 ```
 
-### 3. Run Inference (The Dashboard)
+### 2. Run Inference (The Dashboard)
 Run the full pipeline to process data and generate the dashboard:
 ```bash
-python main.py --mode inference
+python app/backend/src/main.py --mode inference
 ```
 *   **Output CSV**: `results/predictions_dashboard.csv` (Contains TLO, Status, Trend)
 *   **Plots**: Check the `plots/` directory for trend visualizations.
 
-### 4. Training (Optional)
+### 3. Training (Optional)
 To retrain the model on new datasets:
 ```bash
-python main.py --mode train
+python app/backend/src/main.py --mode train
 ```
 
 ---

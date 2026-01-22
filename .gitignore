@@ -55,6 +55,7 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
 # pixi environments
 .pixi/*
 !.pixi/config.toml
@@ -84,3 +85,6 @@ dist-ssr
 *.sln
 *.sw?
 app/data/download.json
+
+# Environment files
+.env

@@ -23,6 +23,7 @@ import { ConjunctionEvent, RiskLevel } from './types';
 import ProbabilityChart from './components/ProbabilityChart';
 import { generateRiskAssessment } from './services/geminiService';
 import { fetchCDMUpdates } from './services/cdmService';
+import { API_BASE_URL } from './constants';
 
 // --- Countdown Helper ---
 const formatTimeRemaining = (targetDate: string) => {
@@ -187,7 +188,7 @@ export default function App() {
                <div className="p-4 flex flex-col items-center justify-center text-red-400 space-y-2">
                   <WifiOff className="w-6 h-6" />
                   <span className="text-xs text-center">Backend Connection Failed</span>
-                  <span className="text-[10px] text-slate-500 text-center">Ensure Python API is running on localhost:5000</span>
+                  <span className="text-[10px] text-slate-500 text-center">Ensure the API is running on {API_BASE_URL}</span>
                </div>
             )}
 

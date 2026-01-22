@@ -4,6 +4,11 @@ import os
 import pandas as pd
 from pathlib import Path
 from flask_cors import CORS
+from dotenv import load_dotenv
+
+# Load .env from root directory
+root_dir = Path(__file__).parent.parent.parent.parent
+b_load = load_dotenv(root_dir / '.env')
 
 
 app = flask.Flask(__name__)
@@ -106,4 +111,5 @@ def risk_summary():
     
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get('BACKEND_PORT', 5000)) # Default to 5000 if port not set
+    app.run(host='0.0.0.0', port=port)
