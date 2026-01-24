@@ -23,49 +23,25 @@ def health():
     """Health check endpoint for frontend"""
     return flask.jsonify({"status": "online"})
 
-@app.route("/cdms")
-def cdms():
-    """Return CDM data transformed for frontend ConjunctionEvent format"""
-    json_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'download.json')
+@app.route("/init")
+def satilate_ids():
+    """Return data of the satellite IDs available in the dataset"""
+    json_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'satellites.json')
     
     try:
         with open(json_file_path, 'r') as f:
             raw_data = json.load(f)
         
-        # Transform raw CDM data to ConjunctionEvent format
         transformed_events = []
-        # num = 0
         for cdm in raw_data:
             event = {
-                "id": cdm.get("CDM_ID", "unknown"),
-                "primaryObject": {
-                    "id": cdm.get("SAT_1_ID", ""),
-                    "name": cdm.get("SAT_1_NAME", "Unknown"),
-                    "type": cdm.get("SAT1_OBJECT_TYPE", "PAYLOAD"),
-                    "rcs": cdm.get("SAT1_RCS", "UNKNOWN")
-                },
-                "secondaryObject": {
-                    "id": cdm.get("SAT_2_ID", ""),
-                    "name": cdm.get("SAT_2_NAME", "Unknown"),
-                    "type": cdm.get("SAT2_OBJECT_TYPE", "PAYLOAD"),
-                    "rcs": cdm.get("SAT2_RCS", "UNKNOWN")
-                },
-                "tca": cdm.get("TCA", ""),
-                "missDistance": float(cdm.get("MIN_RNG", 0)),
-                "collisionProb": float(cdm.get("PC", 0)),
-                "predictedProb": float(cdm.get("PC", 0)),  # Will be updated by ML predictions
-                "riskLevel": determine_risk_level(float(cdm.get("PC", 0))),
-                "trend": "STABLE",
-                "probabilityHistory": [{
-                    "timestamp": cdm.get("CREATED", ""),
-                    "value": float(cdm.get("PC", 0)),
-                    "source": "OBSERVED"
-                }],
-                "exclusionVolume": f"SAT1: {cdm.get('SAT_1_EXCL_VOL', 'N/A')} km | SAT2: {cdm.get('SAT_2_EXCL_VOL', 'N/A')} km"
+                "id": cdm.get("SAT_1_ID", ""),
+                "name": cdm.get("SAT_1_NAME", ""),
+                "type": cdm.get("SAT1_OBJECT_TYPE", ""),
+                "rcs": cdm.get("SAT1_RCS", ""),
+                "excl_vol": cdm.get("SAT_1_EXCL_VOL", "")
             }
-            # print(f"Transformed event {num}: {event['id']}, PC: {event['collisionProb']}")
             transformed_events.append(event)
-            # num += 1
         
         return flask.jsonify(transformed_events)
     except FileNotFoundError:
@@ -75,16 +51,48 @@ def cdms():
     except Exception as e:
         return flask.jsonify({"error": str(e)}), 500
 
-def determine_risk_level(pc):
-    """Determine risk level based on collision probability"""
-    if pc >= 0.001:  # 1 in 1000
-        return "CRITICAL"
-    elif pc >= 0.0001:  # 1 in 10,000
-        return "HIGH"
-    elif pc >= 0.00001:  # 1 in 100,000
-        return "MEDIUM"
-    else:
-        return "LOW"
+@app.route("/cdms")
+def cdms():
+    """Return processed CDM data from satellites.json"""
+    sat_id = flask.request.args.get('sat_id')
+    json_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'satellites.json')
+
+    # Should be using a DB for this in production
+
+    cdms = []
+
+    try:
+        with open(json_file_path, 'r') as f:
+            events = json.load(f)
+        for cdm in events:
+            if sat_id == cdm["SAT_1_ID"]:
+                events_dict = cdm.get("EVENTS", {})
+                # TODO: Find better way to structure this. Needs less indentation
+                for event_id, event_data in events_dict.items():
+                    event_entry = {
+                        "CDM_ID": event_id,
+                        "RISK_LEVEL": event_data.get("RISK_LEVEL", ""),
+                        "CREATED": event_data.get("CREATED", ""),
+                        "TCA": event_data.get("TCA", ""),
+                        "MIN_RANGE_M": event_data.get("MIN_RANGE_M", ""),
+                        "PC": event_data.get("PC", ""),
+                        "SAT_2_ID": event_data.get("SAT_2_ID", ""),
+                        "SAT_2_NAME": event_data.get("SAT_2_NAME", ""),
+                        "SAT2_OBJECT_TYPE": event_data.get("SAT2_OBJECT_TYPE", ""),
+                        "SAT2_RCS": event_data.get("SAT2_RCS", ""),
+                        "SAT_2_EXCL_VOL": event_data.get("SAT_2_EXCL_VOL", "")
+                    }
+                    cdms.append(event_entry)
+        return flask.jsonify(cdms)
+    
+    except FileNotFoundError:
+        return flask.jsonify({"error": "Processed CDM data not found. Run data conversion first."}), 404
+    except json.JSONDecodeError:
+        return flask.jsonify({"error": "Invalid JSON data in processed CDM file."}), 500
+    except Exception as e:
+        return flask.jsonify({"error": str(e)}), 500
+
+
 
 @app.route("/predictions")
 def predictions():
@@ -113,3 +121,8 @@ def risk_summary():
 if __name__ == "__main__":
     port = int(os.environ.get('BACKEND_PORT', 5000)) # Default to 5000 if port not set
     app.run(host='0.0.0.0', port=port)
+
+# TODO:
+# - /cdms needs to process data into json file. Where each CDM is categorized by satellite id (if type == PAYLOAD)
+# - /predictions should return json of model predictions from predictions_dashboard.csv
+# - Store results of cdms processed history to display to the graph's x-axis
