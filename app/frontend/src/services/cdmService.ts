@@ -1,10 +1,9 @@
-import { ConjunctionEvent } from "../types";
+import { Satellite, CDMEvent } from "../types";
 import { API_BASE_URL } from "../constants";
 
-export const fetchCDMUpdates = async (): Promise<ConjunctionEvent[]> => {
+export const fetchSatellites = async (): Promise<Satellite[]> => {
   try {
-    // Expecting backend to return a list of ConjunctionEvents
-    const response = await fetch(`${API_BASE_URL}/cdms`);
+    const response = await fetch(`${API_BASE_URL}/init`);
     
     if (!response.ok) {
       throw new Error(`Backend API Error: ${response.status} ${response.statusText}`);
@@ -13,8 +12,23 @@ export const fetchCDMUpdates = async (): Promise<ConjunctionEvent[]> => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Failed to fetch CDMs from backend:", error);
-    // Propagate error to let UI handle "Offline" state
+    console.error("Failed to fetch satellites from backend:", error);
+    throw error;
+  }
+};
+
+export const fetchCDMsForSatellite = async (satId: string): Promise<CDMEvent[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/cdms?sat_id=${satId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Backend API Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Failed to fetch CDMs for satellite ${satId}:`, error);
     throw error;
   }
 };

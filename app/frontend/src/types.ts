@@ -11,6 +11,28 @@ export enum Trend {
   STABLE = 'STABLE'
 }
 
+export interface Satellite {
+  id: string;
+  name: string;
+  type: string;
+  rcs: string;
+  excl_vol: string;
+}
+
+export interface CDMEvent {
+  CDM_ID: string;
+  RISK_LEVEL: string;
+  CREATED: string;
+  TCA: string;
+  MIN_RANGE_M: string;
+  PC: string;
+  SAT_2_ID: string;
+  SAT_2_NAME: string;
+  SAT2_OBJECT_TYPE: string;
+  SAT2_RCS: string;
+  SAT_2_EXCL_VOL: string;
+}
+
 export interface OrbitalObject {
   id: string;
   name: string;
