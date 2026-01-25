@@ -1,8 +1,7 @@
 export enum RiskLevel {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  STABLE = 'STABLE',
+  RESOLVING = 'RESOLVING',
+  ESCALATING = 'ESCALATING'
 }
 
 export enum Trend {

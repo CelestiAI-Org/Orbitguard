@@ -1,6 +1,5 @@
 import os
 import json
-import string
 
 def convert():
     json_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'download.json')
@@ -64,12 +63,13 @@ def convert():
 def determine_risk_level(pc):
     """Determine risk level based on collision probability"""
     if pc >= 0.001:  # 1 in 1000
-        return "CRITICAL"
+        return "ESCALATING"
     elif pc >= 0.0001:  # 1 in 10,000
-        return "HIGH"
+        return "RESOLVING"
     elif pc >= 0.00001:  # 1 in 100,000
-        return "MEDIUM"
+        return "STABLE"
     else:
-        return "LOW"
+        return "STABLE"
+
 
 convert()

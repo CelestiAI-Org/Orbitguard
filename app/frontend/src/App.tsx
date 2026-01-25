@@ -37,9 +37,8 @@ const formatTimeRemaining = (targetDate: string) => {
 // --- Styles ---
 const getRiskColors = (level: RiskLevel) => {
   switch (level) {
-    case RiskLevel.CRITICAL: return 'text-red-500 border-red-900 bg-red-950/20';
-    case RiskLevel.HIGH: return 'text-red-400 border-red-900 bg-red-950/10';
-    case RiskLevel.MEDIUM: return 'text-amber-500 border-amber-900 bg-amber-950/20';
+    case RiskLevel.ESCALATING: return 'text-red-500 border-red-900 bg-red-950/20';
+    case RiskLevel.RESOLVING: return 'text-amber-500 border-amber-900 bg-amber-950/10';
     default: return 'text-slate-400 border-slate-800 bg-slate-900/50';
   }
 };
@@ -342,15 +341,15 @@ export default function App() {
                           <div className="space-y-3">
                           {cdmEvents.map(cdm => {
                              const riskColorClass = 
-                                cdm.RISK_LEVEL === 'CRITICAL' ? 'border-red-500/50 bg-red-950/20' :
-                                cdm.RISK_LEVEL === 'HIGH' ? 'border-red-500/30 bg-red-950/10' :
-                                cdm.RISK_LEVEL === 'MEDIUM' ? 'border-amber-500/30 bg-amber-950/10' :
+                                cdm.RISK_LEVEL === 'ESCALATING' ? 'border-red-500/50 bg-red-950/20' :
+                                cdm.RISK_LEVEL === 'RESOLVING' ? 'border-amber-500/30 bg-amber-950/10' :
+                                cdm.RISK_LEVEL === 'STABLE' ? 'border-slate-700 bg-slate-800/50' :
                                 'border-slate-700 bg-slate-800/50';
                              
                              const riskBadgeClass = 
-                                cdm.RISK_LEVEL === 'CRITICAL' ? 'bg-red-500/20 text-red-400 border-red-500/50' :
-                                cdm.RISK_LEVEL === 'HIGH' ? 'bg-red-500/10 text-red-400 border-red-500/30' :
-                                cdm.RISK_LEVEL === 'MEDIUM' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                                cdm.RISK_LEVEL === 'ESCALATING' ? 'bg-red-500/20 text-red-400 border-red-500/50' :
+                                cdm.RISK_LEVEL === 'RESOLVING' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                                cdm.RISK_LEVEL === 'STABLE' ? 'bg-slate-700 text-slate-400 border-slate-600' :
                                 'bg-slate-700 text-slate-400 border-slate-600';
                              
                              return (
@@ -369,7 +368,7 @@ export default function App() {
                                          <span className={`px-3 py-1 text-xs font-bold rounded border ${riskBadgeClass}`}>
                                             {cdm.RISK_LEVEL}
                                          </span>
-                                         {cdm.RISK_LEVEL === 'CRITICAL' && (
+                                         {cdm.RISK_LEVEL === 'ESCALATING' && (
                                             <div className="flex items-center gap-1 text-red-400 text-xs">
                                                <ShieldAlert className="w-4 h-4 animate-pulse" />
                                                <span>ALERT</span>
