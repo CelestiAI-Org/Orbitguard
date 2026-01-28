@@ -7,7 +7,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 # Load .env from root directory
-root_dir = Path(__file__).parent.parent.parent.parent
+root_dir = Path(__file__).parent.parent.parent
 b_load = load_dotenv(root_dir / '.env')
 
 
@@ -26,7 +26,8 @@ def health():
 @app.route("/init")
 def satilate_ids():
     """Return data of the satellite IDs available in the dataset"""
-    json_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'satellites.json')
+    # Resolve to project `app/data/satellites.json` reliably from this file
+    json_file_path = Path(__file__).resolve().parent.parent / 'data' / 'satellites.json'
     
     try:
         with open(json_file_path, 'r') as f:
@@ -55,7 +56,8 @@ def satilate_ids():
 def cdms():
     """Return processed CDM data from satellites.json"""
     sat_id = flask.request.args.get('sat_id')
-    json_file_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'satellites.json')
+    # Resolve to project `app/data/satellites.json` reliably from this file
+    json_file_path = Path(__file__).resolve().parent.parent / 'data' / 'satellites.json'
 
     # Should be using a DB for this in production
 
