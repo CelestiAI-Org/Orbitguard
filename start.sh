@@ -2,7 +2,7 @@
 
 # Start backend API server in background
 echo "Starting backend API server..."
-cd app/backend && python src/api.py &
+cd app/backend && python api.py &
 BACKEND_PID=$!
 
 # Start frontend

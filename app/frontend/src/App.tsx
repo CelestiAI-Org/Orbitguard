@@ -343,13 +343,13 @@ export default function App() {
                              const riskColorClass = 
                                 cdm.RISK_LEVEL === 'ESCALATING' ? 'border-red-500/50 bg-red-950/20' :
                                 cdm.RISK_LEVEL === 'RESOLVING' ? 'border-amber-500/30 bg-amber-950/10' :
-                                cdm.RISK_LEVEL === 'STABLE' ? 'border-slate-700 bg-slate-800/50' :
+                                cdm.RISK_LEVEL === 'STABLE' ? 'border-green-500 bg-green-900/50' :
                                 'border-slate-700 bg-slate-800/50';
                              
                              const riskBadgeClass = 
                                 cdm.RISK_LEVEL === 'ESCALATING' ? 'bg-red-500/20 text-red-400 border-red-500/50' :
                                 cdm.RISK_LEVEL === 'RESOLVING' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                                cdm.RISK_LEVEL === 'STABLE' ? 'bg-slate-700 text-slate-400 border-slate-600' :
+                                cdm.RISK_LEVEL === 'STABLE' ? 'bg-green-700 text-green-400 border-green-600' :
                                 'bg-slate-700 text-slate-400 border-slate-600';
                              
                              return (

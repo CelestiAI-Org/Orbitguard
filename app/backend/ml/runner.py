@@ -71,11 +71,11 @@ class MLRunner:
                 # Determine Status (Thresholds from Config/Antigravity)
                 # High Risk: > 1e-4 (-4.0 log)
                 # Medium Risk: > 1e-5 (-5.0 log)
-                status = "GREEN"
+                status = "STABLE"
                 if pred_risk >= -4.0:
-                    status = "RED"
+                    status = "ESCALATING"
                 elif pred_risk >= -5.0:
-                    status = "YELLOW"
+                    status = "RESOLVING"
                 
                 results[key] = {
                     "AI_RISK_LOG10": float(pred_risk), # It's already log scale

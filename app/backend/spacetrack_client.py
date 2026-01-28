@@ -74,7 +74,9 @@ def process_and_export():
     print("Running ML Inference...")
     ml_results = ml_runner.predict(raw_data)
 
-    events_map = {}
+    # Two-level grouping: SAT_1 -> SAT_2 encounters
+    sat1_map = {}  # Key: SAT_1_ID, Value: SAT_1 event object
+    sat2_encounters = {}  # Key: "{sat1}_{sat2}_{tca_key}", Value: SAT_2 encounter object
 
     for cdm in raw_data:
         sat1 = cdm.get('SAT_1_ID')
@@ -87,82 +89,115 @@ def process_and_export():
 
         # Grouping Key Logic (Matches ML Preprocessor)
         try:
-            # Parse TCA, floor to minute, isoformat
-            # Standardize format to handle potentially different inputs
             dt = dateutil.parser.parse(tca_str)
             dt_minute = dt.replace(second=0, microsecond=0)
-            tca_key = dt_minute.isoformat() # e.g. 2026-01-26T16:18:00
+            tca_key = dt_minute.isoformat()
         except Exception:
-            tca_key = tca_str # Fallback
+            tca_key = tca_str
 
-        key = f"{sat1}_{sat2}_{tca_key}"
+        # Only process PAYLOAD type satellites
+        sat1_obj_type = cdm.get('SAT1_OBJECT_TYPE', '')
+        if sat1_obj_type != "PAYLOAD":
+            continue
 
-        if key not in events_map:
-            sat1_info = {}
-            events_map[key] = {
-                "ID": key,
-                "SAT_1_ID": int(sat1),
-                "SAT_1_NAME": cdm.get('SAT_1_NAME'),
-                "SAT_2_ID": int(sat2),
-                "SAT_2_NAME": cdm.get('SAT_2_NAME'),
-                "TCA": tca_str, # Keep original string for display
-                "HISTORY": [],
-                # Initialize AI fields (will overwrite if exists)
-                "AI_RISK_LOG10": None,
-                "AI_STATUS": "GRAY",
-                "AI_CERTAINTY": 0.0
+        encounter_key = f"{sat1}_{sat2}_{tca_key}"
+
+        # Initialize SAT_1 entry if not exists
+        if sat1 not in sat1_map:
+            sat1_map[sat1] = {
+                "SAT_1": {
+                    "ID": int(sat1),
+                    "NAME": cdm.get('SAT_1_NAME'),
+                    "RCS": cdm.get('SAT1_RCS'),
+                    "OBJ_TYP": cdm.get('SAT1_OBJECT_TYPE'),
+                    "EXCL_VOL": float(cdm.get('SAT_1_EXCL_VOL'))
+                },
+                "SAT_2_OBJS": []
             }
 
-            # Merge ML Results if available for this key
-            if key in ml_results:
-                pred = ml_results[key]
-                events_map[key].update(pred)
+        # sat2_map
+        # Initialize SAT_2 encounter if not exists
+        if encounter_key not in sat2_encounters:
+            sat2_obj = {
+                "SAT_2": {
+                    "ID": int(sat2),
+                    "NAME": cdm.get('SAT_2_NAME'),
+                    "RCS": cdm.get('SAT2_RCS'),
+                    "OBJ_TYP": cdm.get('SAT2_OBJECT_TYPE'),
+                    "EXCL_VOL": cdm.get('SAT_2_EXCL_VOL')
+                },
+                "CDMS": [],
+                "TCA": tca_str,
+                "AI_RISK_LOG10": None,
+                "AI_STATUS": "GRAY",
+                "AI_CERTAINTY": 0.0,
+                "AI_RISK_PROB": 0.0,
+                "MAX_PC": 0.0,
+                "MIN_RANGE": 0.0,
+                "MSG_COUNT": 0,
+                "_sat1_id": sat1  # Internal reference for grouping
+            }
 
-        # Prepare history item
-        min_rng = cdm.get('MIN_RNG')
-        pc = cdm.get('PC')
+            # Merge ML Results if available for this encounter
+            if encounter_key in ml_results:
+                pred = ml_results[encounter_key]
+                sat2_obj["AI_RISK_LOG10"] = pred.get("AI_RISK_LOG10")
+                sat2_obj["AI_STATUS"] = pred.get("AI_STATUS", "GRAY")
+                sat2_obj["AI_CERTAINTY"] = pred.get("AI_CERTAINTY", 0.0)
+                sat2_obj["AI_RISK_PROB"] = pred.get("AI_RISK_PROB", 0.0)
 
+            sat2_encounters[encounter_key] = sat2_obj
+
+        # Parse numeric values
         try:
-            min_rng_val = float(min_rng) if min_rng else None
+            min_rng_val = float(cdm.get('MIN_RNG')) if cdm.get('MIN_RNG') else None
         except ValueError:
             min_rng_val = None
 
         try:
-            pc_val = float(pc) if pc else 0.0
+            pc_val = float(cdm.get('PC')) if cdm.get('PC') else 0.0
         except ValueError:
             pc_val = 0.0
 
-        history_item = {
+        # Add CDM to the encounter
+        cdm_item = {
             "CDM_ID": cdm.get('CDM_ID'),
             "CREATED": created,
+            "TCA": tca_str,
             "MIN_RNG": min_rng_val,
             "PC": pc_val,
-            "EMERGENCY_REPORTABLE": cdm.get('EMERGENCY_REPORTABLE')
+            "RISK_LVL": '' # Placeholder, could be set based on PC or ML
         }
+        sat2_encounters[encounter_key]["CDMS"].append(cdm_item)
 
-        events_map[key]["HISTORY"].append(history_item)
-
-    events_list = []
-    for key, event in events_map.items():
-        # Sort history by CREATED
-        event["HISTORY"].sort(key=lambda x: x['CREATED'])
+    # Calculate aggregates and attach SAT_2_OBJS to their SAT_1
+    for encounter_key, sat2_obj in sat2_encounters.items():
+        # Sort CDMs by CREATED
+        sat2_obj["CDMS"].sort(key=lambda x: x['CREATED'])
 
         # Calculate aggregates
-        pcs = [h['PC'] for h in event["HISTORY"] if h['PC'] is not None]
-        max_pc = max(pcs) if pcs else None
+        pcs = [c['PC'] for c in sat2_obj["CDMS"] if c['PC'] is not None]
+        sat2_obj["MAX_PC"] = max(pcs) if pcs else 0.0
 
-        rngs = [h['MIN_RNG'] for h in event["HISTORY"] if h['MIN_RNG'] is not None]
-        min_range = min(rngs) if rngs else None
+        rngs = [c['MIN_RNG'] for c in sat2_obj["CDMS"] if c['MIN_RNG'] is not None]
+        sat2_obj["MIN_RANGE"] = min(rngs) if rngs else 0.0
 
-        event["MAX_PC"] = max_pc
-        event["MIN_RANGE"] = min_range
-        event["MSG_COUNT"] = len(event["HISTORY"])
+        sat2_obj["MSG_COUNT"] = len(sat2_obj["CDMS"])
 
+        # Attach to SAT_1
+        sat1_id = sat2_obj.pop("_sat1_id")  # Remove internal reference
+        sat1_map[sat1_id]["SAT_2_OBJS"].append(sat2_obj)
+
+    # Sort SAT_2_OBJS by TCA for each SAT_1
+    events_list = []
+    for sat1_id, event in sat1_map.items():
+        event["SAT_2_OBJS"].sort(key=lambda x: x['TCA'])
         events_list.append(event)
 
-    events_list.sort(key=lambda x: x['TCA'])
+    # Sort events by SAT_1 ID
+    events_list.sort(key=lambda x: x['SAT_1']['ID'])
 
-    # 5. Export to /data/events.json
+    # Export to /data/events.json
     output_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, 'events.json')
@@ -170,7 +205,7 @@ def process_and_export():
     try:
         with open(output_file, 'w') as f:
             json.dump(events_list, f, indent=4)
-        print(f"Exported {len(events_list)} events to {output_file}")
+        print(f"Exported {len(events_list)} SAT_1 events to {output_file}")
         return events_list
     except Exception as e:
         print(f"Export error: {str(e)}")
