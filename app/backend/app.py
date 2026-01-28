@@ -16,7 +16,7 @@ def events():
         # So we process first, then stream the result locally.
         start_time = time.time()
         print("Received request for /events")
-        data = client.process_and_export()
+        data = stc.process_and_export()
         
         if not data:
             yield json.dumps({"error": "Failed to fetch or process data"})
