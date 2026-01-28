@@ -36,7 +36,7 @@ def satilate_ids():
         for cdm in raw_data:
             transformed_events.append(cdm.get("SAT_1", ""))
         
-        return flask.jsonify(transformed_events)
+        return flask.Response(json.dumps(transformed_events), mimetype='application/json')
     except FileNotFoundError:
         return flask.jsonify({"error": "Data file not found"}), 404
     except json.JSONDecodeError:

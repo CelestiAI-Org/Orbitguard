@@ -4,6 +4,7 @@ import {
   AlertTriangle, 
   CheckCircle, 
   ChevronRight, 
+  ChevronDown,
   ShieldAlert,
   Search,
   Cpu,
@@ -19,7 +20,7 @@ import {
   ArrowLeftRight,
   WifiOff
 } from 'lucide-react';
-import { Satellite, CDMEvent, RiskLevel, ProbabilityPoint } from './types';
+import { Satellite, ConjunctionEventData, RiskLevel, CDMRecord } from './types';
 import { fetchSatellites, fetchCDMsForSatellite } from './services/cdmService';
 import { generateRiskAssessment } from './services/geminiService';
 import ProbabilityChart from './components/ProbabilityChart';
@@ -47,33 +48,90 @@ const getRiskColors = (level: RiskLevel) => {
 const SatelliteSidebarItem: React.FC<{ 
   satellite: Satellite; 
   isActive: boolean; 
-  onClick: () => void 
-}> = ({ satellite, isActive, onClick }) => {
+  isExpanded: boolean;
+  conjunctionEvents: ConjunctionEventData[];
+  selectedEventIndex: number | null;
+  onClick: () => void;
+  onEventClick: (index: number) => void;
+}> = ({ satellite, isActive, isExpanded, conjunctionEvents, selectedEventIndex, onClick, onEventClick }) => {
 
   return (
-    <div 
-      onClick={onClick}
-      className={`
-        relative group flex items-center justify-between p-4 cursor-pointer transition-all duration-200 border-b border-slate-800
-        hover:bg-slate-900
-        ${isActive ? 'bg-slate-800 border-l-4 border-l-cyan-500' : 'border-l-4 border-l-transparent'}
-      `}
-    >
-      <div className="flex flex-col gap-1 z-10 w-full">
-        <div className="flex items-center justify-between mb-1">
-           <span className={`text-[10px] font-mono tracking-wider ${isActive ? 'text-slate-400' : 'text-slate-600'}`}>{satellite.id}</span>
-           <div className={`w-2 h-2 rounded-full bg-cyan-500`}></div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-           <span className={`text-sm font-semibold truncate ${isActive ? 'text-white' : 'text-slate-300'}`}>
-              {satellite.name}
-           </span>
-        </div>
-        <div className={`text-xs truncate ${isActive ? 'text-slate-300' : 'text-slate-500'}`}>
-           {satellite.type} | RCS: {satellite.rcs}
+    <div className="border-b border-slate-800">
+      <div 
+        onClick={onClick}
+        className={`
+          relative group flex items-center justify-between p-4 cursor-pointer transition-all duration-200
+          hover:bg-slate-900
+          ${isActive ? 'bg-slate-800 border-l-4 border-l-cyan-500' : 'border-l-4 border-l-transparent'}
+        `}
+      >
+        <div className="flex flex-col gap-1 z-10 w-full">
+          <div className="flex items-center justify-between mb-1">
+             <span className={`text-[10px] font-mono tracking-wider ${isActive ? 'text-slate-400' : 'text-slate-600'}`}>{satellite.id}</span>
+             <div className="flex items-center gap-2">
+               {conjunctionEvents.length > 0 && (
+                 <span className="text-[9px] font-mono bg-amber-900/50 text-amber-400 px-1.5 py-0.5 rounded">
+                   {conjunctionEvents.length}
+                 </span>
+               )}
+               {isExpanded ? (
+                 <ChevronDown className="w-3 h-3 text-slate-500" />
+               ) : (
+                 <ChevronRight className="w-3 h-3 text-slate-500" />
+               )}
+             </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+             <span className={`text-sm font-semibold truncate ${isActive ? 'text-white' : 'text-slate-300'}`}>
+                {satellite.name}
+             </span>
+          </div>
+          <div className={`text-xs truncate ${isActive ? 'text-slate-300' : 'text-slate-500'}`}>
+             {satellite.type} | RCS: {satellite.rcs}
+          </div>
         </div>
       </div>
+      
+      {/* Expandable sub-items for conjunction events */}
+      {isExpanded && conjunctionEvents.length > 0 && (
+        <div className="bg-slate-900/50">
+          {conjunctionEvents.map((event, index) => (
+            <div
+              key={`${event.SAT_2.ID}-${index}`}
+              onClick={(e) => { e.stopPropagation(); onEventClick(index); }}
+              className={`
+                pl-8 pr-4 py-2.5 cursor-pointer transition-all duration-150 border-l-4
+                ${selectedEventIndex === index 
+                  ? 'bg-slate-800 border-l-amber-500' 
+                  : 'border-l-transparent hover:bg-slate-800/50'}
+              `}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-medium truncate ${selectedEventIndex === index ? 'text-white' : 'text-slate-300'}`}>
+                      {event.SAT_2.NAME}
+                    </span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono ${
+                      event.AI_STATUS === 'ESCALATING' ? 'bg-red-900/50 text-red-400' :
+                      event.AI_STATUS === 'RESOLVING' ? 'bg-amber-900/50 text-amber-400' :
+                      'bg-slate-700 text-slate-400'
+                    }`}>
+                      {event.AI_STATUS}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] font-mono text-slate-500">{event.SAT_2.OBJ_TYP}</span>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-[10px] font-mono text-slate-500">{event.MSG_COUNT} CDMs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -83,7 +141,8 @@ const SatelliteSidebarItem: React.FC<{
 export default function App() {
   const [satellites, setSatellites] = useState<Satellite[]>([]);
   const [selectedSatellite, setSelectedSatellite] = useState<Satellite | null>(null);
-  const [cdmEvents, setCdmEvents] = useState<CDMEvent[]>([]);
+  const [conjunctionEvents, setConjunctionEvents] = useState<ConjunctionEventData[]>([]);
+  const [selectedEventIndex, setSelectedEventIndex] = useState<number | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -117,23 +176,32 @@ export default function App() {
   }, []);
 
   const handleSatelliteClick = async (satellite: Satellite) => {
+    // If clicking the same satellite, toggle expansion
+    if (selectedSatellite?.id === satellite.id) {
+      setSelectedSatellite(null);
+      setConjunctionEvents([]);
+      setSelectedEventIndex(null);
+      setAiAnalysis('');
+      return;
+    }
+    
     setSelectedSatellite(satellite);
-    setCdmEvents([]);
+    setConjunctionEvents([]);
+    setSelectedEventIndex(null);
     setAiAnalysis('');
     setIsLoadingCDMs(true);
-    setIsAnalyzing(true);
+    
     try {
-      const cdms = await fetchCDMsForSatellite(satellite.id);
-      // Sort CDMs by creation date (oldest first for chart)
-      const sortedCdms = cdms.sort((a, b) => 
-        new Date(a.CREATED).getTime() - new Date(b.CREATED).getTime()
-      );
-      setCdmEvents(sortedCdms);
+      const events = await fetchCDMsForSatellite(satellite.id);
+      setConjunctionEvents(events);
       
-      // Generate risk assessment for the satellite
-      if (sortedCdms.length > 0) {
+      // Auto-select first event if available
+      if (events.length > 0) {
+        setSelectedEventIndex(0);
+        setIsAnalyzing(true);
         const assessment = await generateRiskAssessment({ id: satellite.id } as any);
         setAiAnalysis(assessment);
+        setIsAnalyzing(false);
       } else {
         setAiAnalysis('No conjunction events detected for this satellite.');
       }
@@ -142,13 +210,26 @@ export default function App() {
       setAiAnalysis('Failed to load risk assessment.');
     } finally {
       setIsLoadingCDMs(false);
-      setIsAnalyzing(false);
     }
   };
 
+  const handleEventClick = (index: number) => {
+    setSelectedEventIndex(index);
+  };
+
+  // Get the currently selected conjunction event
+  const selectedEvent = selectedEventIndex !== null ? conjunctionEvents[selectedEventIndex] : null;
+
+  // Get all CDM records from the selected event, sorted by creation date
+  const sortedCDMRecords = selectedEvent 
+    ? [...selectedEvent.CDMS].sort((a, b) => 
+        new Date(a.CREATED).getTime() - new Date(b.CREATED).getTime()
+      )
+    : [];
+
   const handleDownloadCDM = () => {
-    if (!selectedSatellite || cdmEvents.length === 0) return;
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cdmEvents, null, 2));
+    if (!selectedSatellite || conjunctionEvents.length === 0) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(conjunctionEvents, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", `${selectedSatellite.id}_cdms.json`);
@@ -212,8 +293,12 @@ export default function App() {
                   <SatelliteSidebarItem 
                      key={satellite.id} 
                      satellite={satellite} 
-                     isActive={selectedSatellite?.id === satellite.id} 
-                     onClick={() => handleSatelliteClick(satellite)} 
+                     isActive={selectedSatellite?.id === satellite.id}
+                     isExpanded={selectedSatellite?.id === satellite.id}
+                     conjunctionEvents={selectedSatellite?.id === satellite.id ? conjunctionEvents : []}
+                     selectedEventIndex={selectedSatellite?.id === satellite.id ? selectedEventIndex : null}
+                     onClick={() => handleSatelliteClick(satellite)}
+                     onEventClick={handleEventClick}
                   />
                ))
             )}
@@ -267,7 +352,7 @@ export default function App() {
                        <div className="flex gap-2">
                           <button 
                              onClick={handleDownloadCDM}
-                             disabled={cdmEvents.length === 0}
+                             disabled={conjunctionEvents.length === 0}
                              className="py-2 px-4 bg-cyan-900/20 hover:bg-cyan-900/40 disabled:opacity-30 disabled:cursor-not-allowed border border-cyan-900/50 text-cyan-400 text-xs font-bold uppercase tracking-wider rounded transition-colors flex items-center justify-center gap-2"
                           >
                              <Download className="w-3 h-3" />
@@ -294,7 +379,7 @@ export default function App() {
                           </div>
                        </div>
                     </div>
-                 ) : cdmEvents.length === 0 ? (
+                 ) : !selectedEvent ? (
                     <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6">
                        <div className="flex flex-col items-center justify-center py-12 text-slate-500">
                           <CheckCircle className="w-12 h-12 mb-3 opacity-50" />
@@ -303,10 +388,63 @@ export default function App() {
                     </div>
                  ) : (
                     <>
-                       {/* Probability Chart */}
-                       <ProbabilityChart data={cdmEvents.map((cdm, index) => ({
+                       {/* Selected Event Header */}
+                       <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-4">
+                          <div className="flex items-center justify-between">
+                             <div className="flex items-center gap-4">
+                                <div>
+                                   <h3 className="text-lg font-semibold text-white">{selectedEvent.SAT_2.NAME}</h3>
+                                   <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
+                                      <span>ID: {selectedEvent.SAT_2.ID}</span>
+                                      <span className="text-slate-600">•</span>
+                                      <span>{selectedEvent.SAT_2.OBJ_TYP}</span>
+                                      <span className="text-slate-600">•</span>
+                                      <span>RCS: {selectedEvent.SAT_2.RCS}</span>
+                                      <span className="text-slate-600">•</span>
+                                      <span>Excl Vol: {selectedEvent.SAT_2.EXCL_VOL} km</span>
+                                   </div>
+                                </div>
+                             </div>
+                             <div className="flex items-center gap-3">
+                                <span className={`px-3 py-1.5 text-xs font-bold rounded border ${
+                                   selectedEvent.AI_STATUS === 'ESCALATING' ? 'bg-red-500/20 text-red-400 border-red-500/50' :
+                                   selectedEvent.AI_STATUS === 'RESOLVING' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                                   'bg-slate-700 text-slate-400 border-slate-600'
+                                }`}>
+                                   {selectedEvent.AI_STATUS}
+                                </span>
+                                {selectedEvent.AI_STATUS === 'ESCALATING' && (
+                                   <div className="flex items-center gap-1 text-red-400">
+                                      <ShieldAlert className="w-5 h-5 animate-pulse" />
+                                   </div>
+                                )}
+                             </div>
+                          </div>
+                          <div className="grid grid-cols-4 gap-4 mt-4 pt-3 border-t border-slate-700/50">
+                             <div className="text-center">
+                                <label className="text-[10px] text-slate-500 uppercase block mb-1">TCA</label>
+                                <div className="text-sm font-mono text-slate-300">{new Date(selectedEvent.TCA).toLocaleString()}</div>
+                             </div>
+                             <div className="text-center">
+                                <label className="text-[10px] text-slate-500 uppercase block mb-1">Min Range</label>
+                                <div className="text-sm font-mono text-white">{selectedEvent.MIN_RANGE}m</div>
+                             </div>
+                             <div className="text-center">
+                                <label className="text-[10px] text-slate-500 uppercase block mb-1">Max PC</label>
+                                <div className="text-sm font-mono text-white">{selectedEvent.MAX_PC.toExponential(4)}</div>
+                             </div>
+                             <div className="text-center">
+                                <label className="text-[10px] text-slate-500 uppercase block mb-1">AI Certainty</label>
+                                <div className="text-sm font-mono text-cyan-400">{(selectedEvent.AI_CERTAINTY * 100).toFixed(0)}%</div>
+                             </div>
+                          </div>
+                       </div>
+
+                       {/* Probability & Range Chart */}
+                       <ProbabilityChart data={sortedCDMRecords.map((cdm) => ({
                           timestamp: cdm.CREATED,
-                          value: parseFloat(cdm.PC),
+                          value: cdm.PC,
+                          range: cdm.MIN_RNG,
                           source: 'OBSERVED' as const
                        }))} />
 
@@ -332,86 +470,65 @@ export default function App() {
                           )}
                        </div>
 
-                       {/* CDM Events List */}
-                       <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6">
-                          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                             <AlertTriangle className="w-5 h-5 text-amber-500" />
-                             Conjunction Events ({cdmEvents.length})
-                          </h3>
-                          <div className="space-y-3">
-                          {cdmEvents.map(cdm => {
-                             const riskColorClass = 
-                                cdm.RISK_LEVEL === 'ESCALATING' ? 'border-red-500/50 bg-red-950/20' :
-                                cdm.RISK_LEVEL === 'RESOLVING' ? 'border-amber-500/30 bg-amber-950/10' :
-                                cdm.RISK_LEVEL === 'STABLE' ? 'border-green-500 bg-green-900/50' :
-                                'border-slate-700 bg-slate-800/50';
-                             
-                             const riskBadgeClass = 
-                                cdm.RISK_LEVEL === 'ESCALATING' ? 'bg-red-500/20 text-red-400 border-red-500/50' :
-                                cdm.RISK_LEVEL === 'RESOLVING' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                                cdm.RISK_LEVEL === 'STABLE' ? 'bg-green-700 text-green-400 border-green-600' :
-                                'bg-slate-700 text-slate-400 border-slate-600';
-                             
-                             return (
-                                <div key={cdm.CDM_ID} className={`border rounded-lg p-4 ${riskColorClass}`}>
-                                   <div className="flex items-start justify-between mb-3">
-                                      <div className="flex-1">
-                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-xs font-mono text-slate-500">CDM #{cdm.CDM_ID}</span>
-                                            <span className="text-xs text-slate-600">•</span>
-                                            <span className="text-xs text-slate-500">{new Date(cdm.CREATED).toLocaleDateString()}</span>
-                                         </div>
-                                         <h4 className="text-white font-semibold text-lg">{cdm.SAT_2_NAME}</h4>
-                                         <p className="text-sm text-slate-400 mt-1">{cdm.SAT2_OBJECT_TYPE} • RCS: {cdm.SAT2_RCS}</p>
-                                      </div>
-                                      <div className="flex flex-col items-end gap-2">
-                                         <span className={`px-3 py-1 text-xs font-bold rounded border ${riskBadgeClass}`}>
-                                            {cdm.RISK_LEVEL}
+                       {/* CDM Records Table */}
+                       <div className="bg-slate-900/50 border border-slate-800 rounded-lg overflow-hidden">
+                          <div className="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+                             <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                                CDM Records ({sortedCDMRecords.length})
+                             </h3>
+                             <div className="text-xs text-slate-500 font-mono">
+                                {selectedEvent.SAT_2.NAME} | {selectedEvent.SAT_2.OBJ_TYP} | Vol: {selectedEvent.SAT_2.EXCL_VOL} km
+                             </div>
+                          </div>
+                          
+                          {/* Table Header */}
+                          <div className="grid grid-cols-4 gap-2 px-4 py-2 bg-slate-800/50 border-b border-slate-700 text-[10px] font-bold uppercase tracking-widest">
+                             <div className="text-slate-400 text-center">CDM ID / Created</div>
+                             <div className="text-cyan-400 text-center">Range (m)</div>
+                             <div className="text-pink-400 text-center">Probability</div>
+                             <div className="text-slate-400 text-center">TCA</div>
+                          </div>
+                          
+                          {/* Table Body */}
+                          <div className="divide-y divide-slate-800/50">
+                             {sortedCDMRecords.map((cdm) => (
+                                <div 
+                                   key={cdm.CDM_ID} 
+                                   className="grid grid-cols-4 gap-2 px-4 py-2 hover:bg-slate-800/30 transition-colors"
+                                >
+                                   {/* CDM ID & Created */}
+                                   <div className="text-center">
+                                      <div className="text-xs font-mono text-slate-500">#{cdm.CDM_ID}</div>
+                                      <div className="text-xs font-mono text-white">
+                                         {new Date(cdm.CREATED).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                         <span className="text-slate-500 ml-1">
+                                            {new Date(cdm.CREATED).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                          </span>
-                                         {cdm.RISK_LEVEL === 'ESCALATING' && (
-                                            <div className="flex items-center gap-1 text-red-400 text-xs">
-                                               <ShieldAlert className="w-4 h-4 animate-pulse" />
-                                               <span>ALERT</span>
-                                            </div>
-                                         )}
                                       </div>
                                    </div>
                                    
-                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-slate-700/50">
-                                      <div>
-                                         <label className="text-[10px] text-slate-500 uppercase block mb-1">TCA</label>
-                                         <div className="text-sm font-mono text-slate-300">
-                                            {new Date(cdm.TCA).toLocaleDateString()}
-                                         </div>
-                                         <div className="text-xs font-mono text-slate-500">
-                                            {new Date(cdm.TCA).toLocaleTimeString()}
-                                         </div>
-                                      </div>
-                                      <div>
-                                         <label className="text-[10px] text-slate-500 uppercase block mb-1">Miss Distance</label>
-                                         <div className="text-sm font-mono text-white">
-                                            {cdm.MIN_RANGE_M}m
-                                         </div>
-                                      </div>
-                                      <div>
-                                         <label className="text-[10px] text-slate-500 uppercase block mb-1">Collision Prob</label>
-                                         <div className="text-sm font-mono text-white">
-                                            {(parseFloat(cdm.PC) * 100).toFixed(4)}%
-                                         </div>
-                                         <div className="text-xs text-slate-500">
-                                            {parseFloat(cdm.PC).toExponential(2)}
-                                         </div>
-                                      </div>
-                                      <div>
-                                         <label className="text-[10px] text-slate-500 uppercase block mb-1">Excl Volume</label>
-                                         <div className="text-sm font-mono text-slate-300">
-                                            {cdm.SAT_2_EXCL_VOL} km
-                                         </div>
+                                   {/* Range */}
+                                   <div className="text-center flex items-center justify-center">
+                                      <span className="text-sm font-mono text-cyan-300">{cdm.MIN_RNG.toFixed(0)}</span>
+                                   </div>
+                                   
+                                   {/* Probability */}
+                                   <div className="text-center flex items-center justify-center">
+                                      <span className="text-sm font-mono text-pink-300">{cdm.PC.toExponential(4)}</span>
+                                   </div>
+                                   
+                                   {/* TCA */}
+                                   <div className="text-center">
+                                      <div className="text-xs font-mono text-slate-400">
+                                         {new Date(cdm.TCA).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                         <span className="text-slate-500 ml-1">
+                                            {new Date(cdm.TCA).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                         </span>
                                       </div>
                                    </div>
                                 </div>
-                             );
-                          })}
+                             ))}
                           </div>
                        </div>
                     </>

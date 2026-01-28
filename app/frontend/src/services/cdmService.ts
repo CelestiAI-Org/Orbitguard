@@ -1,4 +1,4 @@
-import { Satellite, CDMEvent } from "../types";
+import { Satellite, CDMEvent, RawSatellite, ConjunctionEventData } from "../types";
 import { API_BASE_URL } from "../constants";
 
 export const fetchSatellites = async (): Promise<Satellite[]> => {
@@ -9,15 +9,23 @@ export const fetchSatellites = async (): Promise<Satellite[]> => {
       throw new Error(`Backend API Error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
-    return data;
+    const data: RawSatellite[] = await response.json();
+    
+    // Transform the raw API response to our Satellite type
+    return data.map((sat) => ({
+      id: String(sat.ID),
+      name: sat.NAME,
+      type: sat.OBJ_TYP,
+      rcs: sat.RCS,
+      excl_vol: sat.EXCL_VOL
+    }));
   } catch (error) {
     console.error("Failed to fetch satellites from backend:", error);
     throw error;
   }
 };
 
-export const fetchCDMsForSatellite = async (satId: string): Promise<CDMEvent[]> => {
+export const fetchCDMsForSatellite = async (satId: string): Promise<ConjunctionEventData[]> => {
   try {
     const response = await fetch(`${API_BASE_URL}/cdms?sat_id=${satId}`);
     
@@ -25,7 +33,7 @@ export const fetchCDMsForSatellite = async (satId: string): Promise<CDMEvent[]> 
       throw new Error(`Backend API Error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data: ConjunctionEventData[] = await response.json();
     return data;
   } catch (error) {
     console.error(`Failed to fetch CDMs for satellite ${satId}:`, error);
