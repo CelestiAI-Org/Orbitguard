@@ -7,7 +7,7 @@ BACKEND_PID=$!
 
 # Start frontend
 echo "Starting frontend..."
-cd app/frontend && npm run dev &
+cd app/frontend && bun run dev &
 FRONTEND_PID=$!
 
 # Handle cleanup on exit
