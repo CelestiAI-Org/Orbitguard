@@ -1,6 +1,6 @@
 import json
 import time
-import SpaceTrackClient as stc
+import spacetrack_client as stc
 from flask import Flask, Response, stream_with_context
 from flask_cors import CORS
 
