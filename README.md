@@ -7,7 +7,7 @@ ActInSpace isn't just about tech demos. We pitched OrbitGuard as a SaaS platform
 
 ## 🎬 Demo
 
-<img src="assets/demo.gif" width="90%" alt="OrbitGuard Dashboard Demo">
+<img src="assets/demo.gif" width="100%" alt="OrbitGuard Dashboard Demo">
 
 *Real-time risk assessment, trends, and uncertainty indicators in action.*
 
