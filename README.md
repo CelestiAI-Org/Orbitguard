@@ -7,7 +7,7 @@ ActInSpace isn't just about tech demos. We pitched OrbitGuard as a SaaS platform
 
 ## 🎬 Demo
 
-![OrbitGuard Dashboard Demo](assets/demo.gif)
+<img src="assets/demo.gif" width="80%" alt="OrbitGuard Dashboard Demo">
 
 *Real-time risk assessment, trends, and uncertainty indicators in action.*
 
@@ -92,7 +92,7 @@ Outputs go to `results/predictions_dashboard.csv` and `plots/` directory.
 ![Business Model Canvas](assets/BMC.png)
 
 OrbitGuard was pitched as SaaS for:
-- Commercial operators (Starlink, OneWeb)
+- Commercial operators (Planet, Spire)
 - Emerging space nations
 - Insurance companies
 
