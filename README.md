@@ -104,17 +104,21 @@ Python • PyTorch/TensorFlow • TypeScript • Docker • DevContainers
 
 ## 🌠 Reflection
 
-Leading a team at a 24-hour hackathon is chaotic, especially as a first-year CS student. Key takeaways:
+Leading a technical team at a hackathon is chaotic, especially when you're a first-year CS student coordinating an aerospace engineer, ML engineer, and software engineer. This was my second time doing it, and I still had impostor syndrome at times. But you have 24 hours to build something that works AND pitch it as a viable business.
 
-**Leadership:** Make fast, realistic decisions; trust your team's instincts.
+**On leadership:**  
+Making fast decisions about what's realistic vs nice-to-have is hard. We cut features like real-time orbital propagation because they weren't achievable. Learning to trust your team while coordinating was key. Nathan's aerospace expertise gave us credibility when judges asked about orbital mechanics.
 
-**Business:** Nathan's aerospace expertise lent credibility; the pitch deck and BMC helped judges see OrbitGuard as a real SaaS.
+**On the business side:**  
+Nathan built the pitch deck and worked on the business model canvas alongside me, then I practiced the pitch. Having an actual aerospace engineer made a huge difference when judges asked technical questions. Meanwhile, Mostafa and Jonty were finishing the ML pipeline.
 
-**ML:** Skip connections were a 2am breakthrough, improving validation loss 5x.
+**On ML:**  
+The skip connection was Mostafa's idea we almost didn't try. He spent 4 hours at 2am debugging it. Turns out it gave us 5x improvement. Sometimes weird ideas are worth pursuing, and trusting your team's instincts is part of leading.
 
-**Collaboration:** Each team member's expertise was essential.
+**On collaboration:**  
+Everyone brought something different. Mostafa knew ML inside out, Jonty kept infrastructure from falling apart, Nathan understood the actual aerospace problem, and I made sure we had a cohesive story. The best part was seeing it come together in the final pitch.
 
-The judges valued that OrbitGuard was both technically sound and business-ready.
+The judges liked that we built something that could actually become a company. That's what ActInSpace is about.
 
 ---
 
