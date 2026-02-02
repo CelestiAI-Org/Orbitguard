@@ -8,7 +8,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 # Load .env from root directory
-root_dir = Path(__file__).parent.parent.parent
+root_dir = Path(__file__).parent.parent
 b_load = load_dotenv(root_dir / '.env')
 
 

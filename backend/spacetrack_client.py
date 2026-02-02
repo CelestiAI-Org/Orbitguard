@@ -10,11 +10,10 @@ from ml.runner import MLRunner
 
 
 # Load .env from root directory
-root_dir = Path(__file__).parent.parent.parent
+root_dir = Path(__file__).parent.parent
 b_load = load_dotenv(root_dir / '.env')
 
 # Constants
-SPACE_TRACK_LOGIN_URL = "https://www.space-track.org/ajaxauth/login"
 SPACE_TRACK_BASE_URL = "https://www.space-track.org"
 IDENTITY = os.getenv("ST_IDENTITY")
 PASSWORD = os.getenv("ST_PASSWORD")
@@ -32,7 +31,8 @@ class SpaceTrackClient:
             "password": PASSWORD
         }
         try:
-            response = self.session.post(SPACE_TRACK_LOGIN_URL, data=payload)
+            login_url = f"{SPACE_TRACK_BASE_URL}/ajaxauth/login"
+            response = self.session.post(login_url, data=payload)
             if response.status_code == 200:
                 self.LoggedIn = True
                 print("Successfully logged in to Space-Track.")

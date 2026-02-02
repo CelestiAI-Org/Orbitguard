@@ -2,12 +2,12 @@
 
 # Start backend API server in background
 echo "Starting backend API server..."
-cd app/backend && python api.py &
+cd backend && python api.py &
 BACKEND_PID=$!
 
 # Start frontend
 echo "Starting frontend..."
-cd app/frontend && bun run dev &
+cd frontend && bun run dev &
 FRONTEND_PID=$!
 
 # Handle cleanup on exit
