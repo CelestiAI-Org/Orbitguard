@@ -58,20 +58,25 @@ Python & npm dependencies will be installed automatically for development
 ### 2. Environment file
 
 1. Create a `.env` file 
-2. Add the following to it:
+2. The `.env` file needs the following variables to work
+    - `ST_IDENTITY`
+    - `ST_PASSWORD`
+    
+3. It should look something like:
+
     ```
-    # Collision Risk AI Configuration
+    # SPACE-TRACK AUTH
+    ST_IDENTITY = "email"
+    ST_PASSWORD = "pwd"
 
-    # Backend Configuration
+    # Port Config (optional)
     BACKEND_PORT=PORT
-
-    # Frontend Configuration
     FRONTEND_PORT=PORT
 
     # Gemini API (optional)
     GEMINI_API_KEY=API_KEY_HERE
     ```
-3. Replace `PORT` & `API_KEY_HERE`
+    - Ports can be changed if default ones are taken up
 
 ### 3. Start up script
 

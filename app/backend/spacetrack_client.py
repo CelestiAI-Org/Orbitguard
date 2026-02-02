@@ -38,10 +38,10 @@ class SpaceTrackClient:
                 print("Successfully logged in to Space-Track.")
                 return True
             else:
-                print(f"Login failed: {response.status_code} - {response.text}")
+                print(f"Space-Track login failed: {response.status_code} - {response.text}")
                 return False
         except Exception as e:
-            print(f"Login error: {str(e)}")
+            print(f"Space-Track login error: {str(e)}")
             return False
 
     def fetch_cdms(self):

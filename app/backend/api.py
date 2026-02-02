@@ -17,7 +17,7 @@ CORS(app)  # Enable CORS for frontend access
 
 @app.route("/")
 def hello():
-    return flask.jsonify({"status": "online", "message": "Collision Risk AI API"})
+    return flask.redirect("/health")
 
 @app.route("/health")
 def health():
@@ -69,22 +69,6 @@ def cdms():
     except Exception as e:
         return flask.jsonify({"error": str(e)}), 500
 
-
-
-# @app.route("/predictions")
-# def predictions():
-#     """Return ML model predictions from predictions_dashboard.csv"""
-#     results_path = Path(__file__).parent.parent / "results" / "predictions_dashboard.csv"
-    
-#     try:
-#         if not results_path.exists():
-#             return flask.jsonify({"error": "No predictions available. Run inference first."}), 404
-        
-#         df = pd.read_csv(results_path)
-#         predictions_data = df.to_dict('records')
-#         return flask.jsonify(predictions_data)
-#     except Exception as e:
-#         return flask.jsonify({"error": str(e)}), 500
     
 
 @app.route("/risk-summary", methods=['GET'])
@@ -96,8 +80,8 @@ def risk_summary():
     
 
 if __name__ == "__main__":
-    port = int(os.environ.get('BACKEND_PORT', 5000)) # Default to 5000 if port not set
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get('BACKEND_PORT', '8000')) # Default to 8000 if port not set
+    app.run(host='0.0.0.0', port=port, debug=True)
 
 # TODO:
 # - /cdms needs to process data into json file. Where each CDM is categorized by satellite id (if type == PAYLOAD)

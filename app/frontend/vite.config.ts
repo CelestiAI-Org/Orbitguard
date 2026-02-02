@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
       plugins: [react()],
       define: {
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.API_BASE_URL': JSON.stringify(`http://localhost:${env.BACKEND_PORT || '6000'}`),
+        'process.env.API_BASE_URL': JSON.stringify(`http://localhost:${env.BACKEND_PORT || '8000'}`),
       },
       resolve: {
         alias: {
