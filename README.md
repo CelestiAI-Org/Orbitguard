@@ -1,57 +1,63 @@
-# 🛰️ OrbitGuard
-**AI-Powered Collision Risk Intelligence for Satellite Operators** | ActInSpace 2026
+🛰️ OrbitGuard
+
+AI-Powered Collision Risk Intelligence for Satellite Operators | ActInSpace 2026
 
 Built in 24 hours at ActInSpace 2026. As a first-year CS student, I led a team of 4 to develop an AI system that filters critical satellite collision warnings from thousands of daily false positives. Our LSTM learns how risk evolves over time and tells operators exactly when they need to act.
 
-ActInSpace isn't just about tech demos. We pitched this as a SaaS platform with a full business model targeting commercial satellite operators.
+ActInSpace isn’t just about tech demos — we pitched OrbitGuard as a SaaS platform with a full business model targeting commercial satellite operators.
 
-## 👥 Team
+🎬 Demo
 
-| Name | Role | What They Did |
-|------|------|---------------|
-| **Aayush Prakash** | Team Lead | Coordinated team, made key architecture decisions, delivered final pitch |
-| **Mostafa Sherif** | ML Engineer | Built skip-connection LSTM, designed preprocessing pipeline, implemented uncertainty quantification |
-| **Jonty McBreen-Graham** | Software Engineer | TypeScript backend, API integration, deployment |
-| **Nathan Rawiri** | Aerospace Engineer | Research on orbital mechanics, created pitch deck, provided domain expertise |
+This GIF demonstrates the OrbitGuard dashboard, including real-time risk assessment, trends, and uncertainty indicators. Loops automatically.
 
-## 🎯 The Problem
+👥 Team
+Name	Role	Contributions
+Aayush Prakash	Team Lead	Coordinated team, architecture decisions, delivered final pitch
+Mostafa Sherif	ML Engineer	Skip-connection LSTM, preprocessing pipeline, uncertainty quantification
+Jonty McBreen-Graham	Software Engineer	TypeScript backend, API integration, deployment
+Nathan Rawiri	Aerospace Engineer	Orbital mechanics research, pitch deck, domain expertise
+🎯 The Problem
 
-Satellite operators get 20-30 collision warning updates per event over a week. Most are noise. The current approach treats each message independently, so you can't tell if risk is increasing or decreasing. We needed a system that learns temporal patterns and tells operators **when** to act, not just how risky things are.
+Satellite operators receive 20–30 collision warning updates per event over a week. Most are noise. Current systems treat each message independently, so it’s impossible to track whether risk is increasing or decreasing. OrbitGuard learns temporal patterns and tells operators when to act, not just the risk level.
 
-## 🧠 The Solution
+🧠 The Solution
+Data Pipeline
 
-### Data Pipeline
-Raw CDMs come in as JSON snapshots. We built an ETL pipeline that groups messages by event, reconstructs the timeline, log-scales miss distance (10km to 10m range), and pads sequences for batch processing.
+Raw CDMs come as JSON snapshots sourced from Space-Track.org
+. We built an ETL pipeline that:
 
-### The Neural Network
+Groups messages by event
 
-**Version 1: Standard LSTM**  
-Learned temporal patterns but was slow to react to sudden probability jumps. Validation loss: 1.5e-5.
+Reconstructs the timeline
 
-**Version 2: Skip-Connection LSTM (Final)**  
-Added a residual skip connection giving the model direct access to the latest probability alongside the full sequence. This was the breakthrough.
+Log-scales miss distance (10 km → 10 m)
 
-**Results:**
-- Validation loss: 3.0e-6 (5x better)
-- Faster convergence
-- Much better at catching sudden risk changes
+Pads sequences for batch processing
 
-The insight: sometimes the latest data point is most important, but you need full history for context. The skip connection uses both.
+Neural Network
 
-### The Dashboard
+Version 1: Standard LSTM
 
-🚦 **Status:** ESCALATING (immediate review) | STABLE (monitor) | RESOLVING (routine)
+Learned temporal patterns but slow on sudden probability jumps
 
-⏳ **Time of Last Opportunity:** Calculates exact hours left to upload a maneuver  
-Example: "You have 11.8 hours left to decide"
+Validation loss: 1.5e-5
 
-📈 **Risk Trends:** INCREASING | DECREASING | STABLE
+Version 2: Skip-Connection LSTM (Final)
 
-🔮 **Uncertainty:** Monte Carlo Dropout gives confidence scores (98% vs 60%) so operators know when to trust predictions
+Residual skip connection gives direct access to latest probability alongside full history
 
-## 🚀 Quick Start
+Validation loss: 3.0e-6 (5x better)
 
-```bash
+Faster convergence and better at catching sudden risk changes
+
+Dashboard
+
+🚦 Status: ESCALATING | STABLE | RESOLVING
+⏳ Time of Last Opportunity: Hours left to upload maneuver
+📈 Risk Trends: INCREASING | DECREASING | STABLE
+🔮 Uncertainty: Monte Carlo Dropout gives confidence scores (e.g., 98% vs 60%)
+
+🚀 Quick Start
 git clone https://github.com/CelestiAI-Org/Orbitguard.git
 cd Orbitguard
 
@@ -62,51 +68,47 @@ echo "ST_PASSWORD=your_password" >> .env
 # Run
 chmod +x ./start.sh
 ./start.sh
-```
 
-Or open in [DevContainer](https://containers.dev/).
 
-### Run Inference
-```bash
+Or open in DevContainer
+.
+
+Run Inference
 python app/backend/src/main.py --mode inference
-```
 
-Outputs go to `results/predictions_dashboard.csv` and `plots/` directory.
 
-## 📊 Example Output
+Outputs go to results/predictions_dashboard.csv and plots/ directory.
 
-| Event | TCA | Status | Hours Left | Trend | Certainty |
-|-------|-----|--------|-----------|-------|-----------|
-| Sat A vs Sat B | Dec 25, 12:00 | 🛑 ESCALATING | 4.5 hrs | 📈 INCREASING | 98% |
-| Sat X vs Sat Y | Dec 26, 09:00 | ✅ RESOLVING | 28.0 hrs | 📉 DECREASING | 99% |
+📊 Example Output
+Event	TCA	Status	Hours Left	Trend	Certainty
+Sat A vs Sat B	Dec 25, 12:00	🛑 ESCALATING	4.5 hrs	📈 INCREASING	98%
+Sat X vs Sat Y	Dec 26, 09:00	✅ RESOLVING	28.0 hrs	📉 DECREASING	99%
+💼 Business Model
 
-## 💼 Business Model
+OrbitGuard was pitched as SaaS for:
 
-We pitched OrbitGuard as SaaS targeting commercial operators (Starlink, OneWeb), emerging space nations, and insurance companies. Tiered subscription based on number of satellites. The pitch: avoid one collision and you've paid for decades of service.
+Commercial operators (Starlink, OneWeb)
 
-## 🛠️ Tech Stack
+Emerging space nations
+
+Insurance companies
+
+Tiered subscriptions are based on satellite fleet size. Avoiding just one collision pays for decades of service.
+
+🛠️ Tech Stack
 
 Python • PyTorch/TensorFlow • TypeScript • Docker • DevContainers
 
-## 🌠 Reflection
+🌠 Reflection
 
-Leading a technical team at a hackathon is chaotic, especially when you're a first-year CS student coordinating an aerospace engineer, ML engineer, and software engineer. This was my second time doing it, and I still had impostor syndrome at times. But you have 24 hours to build something that works AND pitch it as a viable business.
+Leading a team at a 24-hour hackathon is chaotic, especially as a first-year CS student. Key takeaways:
 
-**On leadership:**  
-Making fast decisions about what's realistic vs nice-to-have is hard. We cut features like real-time orbital propagation because they weren't achievable. Learning to trust your team while coordinating was key. Nathan's aerospace expertise gave us credibility when judges asked about orbital mechanics.
+Leadership: Make fast, realistic decisions; trust your team’s instincts.
+Business: Nathan’s aerospace expertise lent credibility; the pitch deck and BMC helped judges see OrbitGuard as a real SaaS.
+ML: Skip connections were a 2am breakthrough, improving validation loss 5x.
+Collaboration: Each team member’s expertise was essential.
 
-**On the business side:**  
-Nathan built the pitch deck and worked on the business model canvas alongside me, then I practiced the pitch. Having an actual aerospace engineer made a huge difference when judges asked technical questions. Meanwhile, Mostafa and Jonty were finishing the ML pipeline.
+The judges valued that OrbitGuard was both technically sound and business-ready.
 
-**On ML:**  
-The skip connection was Mostafa's idea we almost didn't try. He spent 4 hours at 2am debugging it. Turns out it gave us 5x improvement. Sometimes weird ideas are worth pursuing, and trusting your team's instincts is part of leading.
-
-**On collaboration:**  
-Everyone brought something different. Mostafa knew ML inside out, Jonty kept infrastructure from falling apart, Nathan understood the actual aerospace problem, and I made sure we had a cohesive story. The best part was seeing it come together in the final pitch.
-
-The judges liked that we built something that could actually become a company. That's what ActInSpace is about.
-
----
-
-**Built by NEO-FLUX Team for ActInSpace 2026**  
-*Making space safer, one prediction at a time.*
+Built by NEO-FLUX Team for ActInSpace 2026
+Making space safer, one prediction at a time.
