@@ -1,63 +1,64 @@
-🛰️ OrbitGuard
+# 🛰️ OrbitGuard
+**AI-Powered Collision Risk Intelligence for Satellite Operators** | ActInSpace 2025
 
-AI-Powered Collision Risk Intelligence for Satellite Operators | ActInSpace 2026
+Built in 24 hours at ActInSpace 2025. As a first-year CS student, I led a team of 4 to develop an AI system that filters critical satellite collision warnings from thousands of daily false positives. Our LSTM learns how risk evolves over time and tells operators exactly when they need to act.
 
-Built in 24 hours at ActInSpace 2026. As a first-year CS student, I led a team of 4 to develop an AI system that filters critical satellite collision warnings from thousands of daily false positives. Our LSTM learns how risk evolves over time and tells operators exactly when they need to act.
+ActInSpace isn't just about tech demos. We pitched OrbitGuard as a SaaS platform with a full business model targeting commercial satellite operators.
 
-ActInSpace isn’t just about tech demos — we pitched OrbitGuard as a SaaS platform with a full business model targeting commercial satellite operators.
+## 🎬 Demo
 
-🎬 Demo
+![OrbitGuard Dashboard Demo](assets/demo.gif)
 
-This GIF demonstrates the OrbitGuard dashboard, including real-time risk assessment, trends, and uncertainty indicators. Loops automatically.
+*Real-time risk assessment, trends, and uncertainty indicators in action.*
 
-👥 Team
-Name	Role	Contributions
-Aayush Prakash	Team Lead	Coordinated team, architecture decisions, delivered final pitch
-Mostafa Sherif	ML Engineer	Skip-connection LSTM, preprocessing pipeline, uncertainty quantification
-Jonty McBreen-Graham	Software Engineer	TypeScript backend, API integration, deployment
-Nathan Rawiri	Aerospace Engineer	Orbital mechanics research, pitch deck, domain expertise
-🎯 The Problem
+## 👥 Team
 
-Satellite operators receive 20–30 collision warning updates per event over a week. Most are noise. Current systems treat each message independently, so it’s impossible to track whether risk is increasing or decreasing. OrbitGuard learns temporal patterns and tells operators when to act, not just the risk level.
+| Name | Role | Contributions |
+|------|------|---------------|
+| **Aayush Prakash** | Team Lead | Coordinated team, architecture decisions, delivered final pitch |
+| **Mostafa Sherif** | ML Engineer | Skip-connection LSTM, preprocessing pipeline, uncertainty quantification |
+| **Jonty McBreen-Graham** | Software Engineer | TypeScript backend, API integration, deployment |
+| **Nathan Rawiri** | Aerospace Engineer | Orbital mechanics research, pitch deck, domain expertise |
 
-🧠 The Solution
-Data Pipeline
+## 🎯 The Problem
 
-Raw CDMs come as JSON snapshots sourced from Space-Track.org
-. We built an ETL pipeline that:
+Satellite operators receive 20-30 collision warning updates per event over a week. Most are noise. Current systems treat each message independently, so it's impossible to track whether risk is increasing or decreasing. OrbitGuard learns temporal patterns and tells operators when to act, not just the risk level.
 
-Groups messages by event
+## 🧠 The Solution
 
-Reconstructs the timeline
+### Data Pipeline
+Raw CDMs come as JSON snapshots sourced from [Space-Track.org](https://www.space-track.org). We built an ETL pipeline that:
+- Groups messages by event
+- Reconstructs the timeline
+- Log-scales miss distance (10 km → 10 m)
+- Pads sequences for batch processing
 
-Log-scales miss distance (10 km → 10 m)
+### Neural Network
 
-Pads sequences for batch processing
+**Version 1: Standard LSTM**  
+Learned temporal patterns but slow on sudden probability jumps. Validation loss: 1.5e-5
 
-Neural Network
+**Version 2: Skip-Connection LSTM (Final)**  
+Residual skip connection gives direct access to latest probability alongside full history.
 
-Version 1: Standard LSTM
+Results:
+- Validation loss: 3.0e-6 (5x better)
+- Faster convergence
+- Better at catching sudden risk changes
 
-Learned temporal patterns but slow on sudden probability jumps
+### Dashboard
 
-Validation loss: 1.5e-5
+🚦 **Status:** ESCALATING | STABLE | RESOLVING
 
-Version 2: Skip-Connection LSTM (Final)
+⏳ **Time of Last Opportunity:** Hours left to upload maneuver
 
-Residual skip connection gives direct access to latest probability alongside full history
+📈 **Risk Trends:** INCREASING | DECREASING | STABLE
 
-Validation loss: 3.0e-6 (5x better)
+🔮 **Uncertainty:** Monte Carlo Dropout gives confidence scores (e.g., 98% vs 60%)
 
-Faster convergence and better at catching sudden risk changes
+## 🚀 Quick Start
 
-Dashboard
-
-🚦 Status: ESCALATING | STABLE | RESOLVING
-⏳ Time of Last Opportunity: Hours left to upload maneuver
-📈 Risk Trends: INCREASING | DECREASING | STABLE
-🔮 Uncertainty: Monte Carlo Dropout gives confidence scores (e.g., 98% vs 60%)
-
-🚀 Quick Start
+```bash
 git clone https://github.com/CelestiAI-Org/Orbitguard.git
 cd Orbitguard
 
@@ -68,47 +69,54 @@ echo "ST_PASSWORD=your_password" >> .env
 # Run
 chmod +x ./start.sh
 ./start.sh
+```
 
+Or open in [DevContainer](https://containers.dev/).
 
-Or open in DevContainer
-.
-
-Run Inference
+### Run Inference
+```bash
 python app/backend/src/main.py --mode inference
+```
 
+Outputs go to `results/predictions_dashboard.csv` and `plots/` directory.
 
-Outputs go to results/predictions_dashboard.csv and plots/ directory.
+## 📊 Example Output
 
-📊 Example Output
-Event	TCA	Status	Hours Left	Trend	Certainty
-Sat A vs Sat B	Dec 25, 12:00	🛑 ESCALATING	4.5 hrs	📈 INCREASING	98%
-Sat X vs Sat Y	Dec 26, 09:00	✅ RESOLVING	28.0 hrs	📉 DECREASING	99%
-💼 Business Model
+| Event | TCA | Status | Hours Left | Trend | Certainty |
+|-------|-----|--------|-----------|-------|-----------|
+| Sat A vs Sat B | Dec 25, 12:00 | 🛑 ESCALATING | 4.5 hrs | 📈 INCREASING | 98% |
+| Sat X vs Sat Y | Dec 26, 09:00 | ✅ RESOLVING | 28.0 hrs | 📉 DECREASING | 99% |
+
+## 💼 Business Model
+
+![Business Model Canvas](assets/BMC.png)
 
 OrbitGuard was pitched as SaaS for:
+- Commercial operators (Starlink, OneWeb)
+- Emerging space nations
+- Insurance companies
 
-Commercial operators (Starlink, OneWeb)
+Tiered subscriptions based on satellite fleet size. Avoiding just one collision pays for decades of service.
 
-Emerging space nations
-
-Insurance companies
-
-Tiered subscriptions are based on satellite fleet size. Avoiding just one collision pays for decades of service.
-
-🛠️ Tech Stack
+## 🛠️ Tech Stack
 
 Python • PyTorch/TensorFlow • TypeScript • Docker • DevContainers
 
-🌠 Reflection
+## 🌠 Reflection
 
 Leading a team at a 24-hour hackathon is chaotic, especially as a first-year CS student. Key takeaways:
 
-Leadership: Make fast, realistic decisions; trust your team’s instincts.
-Business: Nathan’s aerospace expertise lent credibility; the pitch deck and BMC helped judges see OrbitGuard as a real SaaS.
-ML: Skip connections were a 2am breakthrough, improving validation loss 5x.
-Collaboration: Each team member’s expertise was essential.
+**Leadership:** Make fast, realistic decisions; trust your team's instincts.
+
+**Business:** Nathan's aerospace expertise lent credibility; the pitch deck and BMC helped judges see OrbitGuard as a real SaaS.
+
+**ML:** Skip connections were a 2am breakthrough, improving validation loss 5x.
+
+**Collaboration:** Each team member's expertise was essential.
 
 The judges valued that OrbitGuard was both technically sound and business-ready.
 
-Built by NEO-FLUX Team for ActInSpace 2026
-Making space safer, one prediction at a time.
+---
+
+**Built by NEO-FLUX Team for ActInSpace 2025**  
+*Making space safer, one prediction at a time.*
