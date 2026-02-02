@@ -108,5 +108,5 @@ The judges liked that we built something that could actually become a company. T
 
 ---
 
-**Built by NEO-FLUX Team for ActInSpace 2025**  
+**Built by NEO-FLUX Team for ActInSpace 2026**  
 *Making space safer, one prediction at a time.*
