@@ -1,7 +1,7 @@
 # 🛰️ OrbitGuard
-**AI-Powered Collision Risk Intelligence for Satellite Operators** | ActInSpace 2025
+**AI-Powered Collision Risk Intelligence for Satellite Operators** | ActInSpace 2026
 
-Built in 24 hours at ActInSpace 2025. As a first-year CS student, I led a team of 4 to develop an AI system that filters critical satellite collision warnings from thousands of daily false positives. Our LSTM learns how risk evolves over time and tells operators exactly when they need to act.
+Built in 24 hours at ActInSpace 2026. As a first-year CS student, I led a team of 4 to develop an AI system that filters critical satellite collision warnings from thousands of daily false positives. Our LSTM learns how risk evolves over time and tells operators exactly when they need to act.
 
 ActInSpace isn't just about tech demos. We pitched this as a SaaS platform with a full business model targeting commercial satellite operators.
 
