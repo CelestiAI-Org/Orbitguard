@@ -34,7 +34,17 @@ def satilate_ids():
         raw_data = data
         transformed_events = []
         for cdm in raw_data:
-            transformed_events.append(cdm.get("SAT_1", ""))
+            sat1 = cdm.get("SAT_1", {})
+            sat2_obj = cdm.get("SAT_2_OBJS", [])
+            sat2_obj_count = len(sat2_obj)
+            total_sat1_cdms = 0
+            if sat2_obj_count >= 1:
+                for obj in sat2_obj:
+                    total_sat1_cdms += len(obj.get("CDMS", []))
+            sat1["SAT2_OBJ_COUNT"] = sat2_obj_count
+            sat1["TOTAL_CDMS"] = total_sat1_cdms
+            transformed_events.append(sat1)
+
         
         return flask.Response(json.dumps(transformed_events), mimetype='application/json')
     except FileNotFoundError:
