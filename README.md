@@ -73,12 +73,6 @@ chmod +x ./start.sh
 
 Or open in [DevContainer](https://containers.dev/).
 
-### Run Inference
-```bash
-python app/backend/src/main.py --mode inference
-```
-
-Outputs go to `results/predictions_dashboard.csv` and `plots/` directory.
 
 ## 📊 Example Output
 
@@ -97,6 +91,8 @@ OrbitGuard was pitched as SaaS for:
 - Insurance companies
 
 Tiered subscriptions based on satellite fleet size. Avoiding just one collision pays for decades of service.
+
+The presentation can be found in [assets](assets/) directory
 
 ## 🛠️ Tech Stack
 
