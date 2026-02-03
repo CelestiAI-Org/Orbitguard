@@ -1,5 +1,6 @@
+
 {
-  "name": "OrbitalGuard",
-  "description": "Mission-critical satellite collision risk assessment dashboard featuring LSTM-based predictive analytics and AI-driven decision support.",
+  "name": "Orbit Guard - Conjunction Risk Monitor",
+  "description": "A high-precision mission control dashboard for monitoring satellite conjunction risks, featuring real-time collision probability tracking, orbital visualizations, and AI-driven risk assessments.",
   "requestFramePermissions": []
 }

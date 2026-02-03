@@ -1,36 +1,47 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OrbitalGuard | Conjunction Risk Monitor</title>
+    <title>Orbit Guard | Conjunction Risk Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-      /* Custom scrollbar for technical aerospace feel */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+      body {
+        font-family: 'JetBrains Mono', monospace;
       }
-      ::-webkit-scrollbar-track {
-        background: #0f172a; 
+      /* Custom scrollbar */
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: #020617; }
+      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #334155; }
+      
+      .mission-gradient {
+        background: radial-gradient(circle at top right, rgba(34, 211, 238, 0.05), transparent);
       }
-      ::-webkit-scrollbar-thumb {
-        background: #334155; 
-        border-radius: 2px;
+      
+      .glitch-text:hover {
+        animation: glitch 0.3s cubic-bezier(.25,.46,.45,.94) both infinite;
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #475569; 
+
+      @keyframes glitch {
+        0% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(-2px, -2px); }
+        60% { transform: translate(2px, 2px); }
+        80% { transform: translate(2px, -2px); }
+        100% { transform: translate(0); }
       }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react/": "https://esm.sh/react@^19.2.4/",
     "d3": "https://esm.sh/d3@^7.9.0"
   }
 }
@@ -39,6 +50,6 @@
 </head>
   <body class="bg-slate-950 text-slate-200 antialiased overflow-hidden">
     <div id="root"></div>
-  <script type="module" src="./index.tsx"></script>
-</body>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

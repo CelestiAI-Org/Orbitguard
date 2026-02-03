@@ -1,5 +1,5 @@
 {
-  "name": "orbitalguard",
+  "name": "orbit-guard---conjunction-risk-monitor",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,11 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "@google/genai": "^1.35.0",
-    "recharts": "^3.6.0",
-    "lucide-react": "^0.562.0",
+    "lucide-react": "^0.563.0",
+    "recharts": "^3.7.0",
+    "react-dom": "^19.2.4",
+    "react": "^19.2.4",
     "d3": "^7.9.0"
   },
   "devDependencies": {
