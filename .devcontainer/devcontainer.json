@@ -25,7 +25,7 @@
 		"--gpus=all"
 	],
 
-	"postCreateCommand": "cd app/frontend && bun install",
+	"postCreateCommand": "cd frontend && bun install",
 
 	"remoteUser": "root"
 }

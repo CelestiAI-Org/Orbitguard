@@ -1,6 +1,6 @@
 FROM python:3.10
 WORKDIR /src
-COPY ./app/backend/requirements.txt .
+COPY ./backend/requirements.txt .
 RUN apt update && apt upgrade -y 
 RUN curl -fsSL https://bun.com/install | bash
 RUN pip install --upgrade pip && pip install -Ur requirements.txt
